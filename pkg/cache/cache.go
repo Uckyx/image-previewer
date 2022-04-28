@@ -1,7 +1,5 @@
 package cache
 
-import "errors"
-
 type Key string
 
 type lruCache struct {
@@ -12,12 +10,12 @@ type lruCache struct {
 
 type cacheItem struct {
 	key   Key
-	value interface{}
+	value []byte
 }
 
 type Cache interface {
-	Set(key Key, value interface{}) bool
-	Get(key Key) (interface{}, bool)
+	Set(key Key, value []byte) error
+	Get(key Key) ([]byte, error)
 	Clear()
 }
 
@@ -29,44 +27,37 @@ func NewCache(capacity int) Cache {
 	}
 }
 
-func (lc *lruCache) Set(key Key, value interface{}) bool {
+func (lc *lruCache) Set(key Key, value []byte) error {
 	cItem := &cacheItem{key: key, value: value}
 	if listItem, ok := lc.items[key]; ok {
 		listItem.Value = cItem
 		lc.queue.MoveToFront(listItem)
 
-		return true
+		return nil
 	}
 
 	pushedItem := lc.queue.PushFront(cItem)
 	if lc.queue.Len() > lc.capacity {
-		convertedCacheItem, err := convertToCacheItem(lc.queue.Back().Value)
-		if err != nil {
-			return false
-		}
-
 		lc.queue.Remove(lc.queue.Back())
-		delete(lc.items, convertedCacheItem.key)
+
+		//todo разобраться с значением value
+		delete(lc.items, lc.queue.Back().Value.key)
 	}
 
 	lc.items[key] = pushedItem
 
-	return false
+	return nil
 }
 
-func (lc *lruCache) Get(key Key) (interface{}, bool) {
+func (lc *lruCache) Get(key Key) ([]byte, error) {
 	if listItem, ok := lc.items[key]; ok {
 		lc.queue.MoveToFront(listItem)
 
-		convertedCacheItem, err := convertToCacheItem(listItem.Value)
-		if err != nil {
-			return nil, false
-		}
-
-		return convertedCacheItem.value, true
+		//todo разобраться с значением value
+		return listItem.Value.value, nil
 	}
 
-	return nil, false
+	return nil, nil
 }
 
 func (lc *lruCache) Clear() {
@@ -74,13 +65,4 @@ func (lc *lruCache) Clear() {
 	for item := range lc.items {
 		delete(lc.items, item)
 	}
-}
-
-func convertToCacheItem(value interface{}) (*cacheItem, error) {
-	cItem, ok := value.(*cacheItem)
-	if !ok {
-		return nil, errors.New("первый элемент число")
-	}
-
-	return cItem, nil
 }
