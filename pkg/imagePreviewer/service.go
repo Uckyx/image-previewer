@@ -3,8 +3,6 @@ package imagePreviewer
 import (
 	"errors"
 	"fmt"
-	"github.com/disintegration/imaging"
-	"github.com/gorilla/mux"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +10,9 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/disintegration/imaging"
+	"github.com/gorilla/mux"
 
 	"image-previewer/pkg/cache"
 )
