@@ -1,6 +1,14 @@
 package cache
 
+import "errors"
+
 type Key string
+
+type Cache interface {
+	Set(key Key, value interface{}) bool
+	Get(key Key) (interface{}, bool)
+	Clear()
+}
 
 type lruCache struct {
 	capacity int
@@ -10,13 +18,7 @@ type lruCache struct {
 
 type cacheItem struct {
 	key   Key
-	value []byte
-}
-
-type Cache interface {
-	Set(key Key, value []byte) error
-	Get(key Key) ([]byte, error)
-	Clear()
+	value interface{}
 }
 
 func NewCache(capacity int) Cache {
@@ -27,37 +29,44 @@ func NewCache(capacity int) Cache {
 	}
 }
 
-func (lc *lruCache) Set(key Key, value []byte) error {
+func (lc *lruCache) Set(key Key, value interface{}) bool {
 	cItem := &cacheItem{key: key, value: value}
 	if listItem, ok := lc.items[key]; ok {
 		listItem.Value = cItem
 		lc.queue.MoveToFront(listItem)
 
-		return nil
+		return true
 	}
 
 	pushedItem := lc.queue.PushFront(cItem)
 	if lc.queue.Len() > lc.capacity {
-		lc.queue.Remove(lc.queue.Back())
+		convertedCacheItem, err := convertToCacheItem(lc.queue.Back().Value)
+		if err != nil {
+			return false
+		}
 
-		//todo разобраться с значением value
-		delete(lc.items, lc.queue.Back().Value.key)
+		lc.queue.Remove(lc.queue.Back())
+		delete(lc.items, convertedCacheItem.key)
 	}
 
 	lc.items[key] = pushedItem
 
-	return nil
+	return false
 }
 
-func (lc *lruCache) Get(key Key) ([]byte, error) {
+func (lc *lruCache) Get(key Key) (interface{}, bool) {
 	if listItem, ok := lc.items[key]; ok {
 		lc.queue.MoveToFront(listItem)
 
-		//todo разобраться с значением value
-		return listItem.Value.value, nil
+		convertedCacheItem, err := convertToCacheItem(listItem.Value)
+		if err != nil {
+			return nil, false
+		}
+
+		return convertedCacheItem.value, true
 	}
 
-	return nil, nil
+	return nil, false
 }
 
 func (lc *lruCache) Clear() {
@@ -65,4 +74,13 @@ func (lc *lruCache) Clear() {
 	for item := range lc.items {
 		delete(lc.items, item)
 	}
+}
+
+func convertToCacheItem(value interface{}) (*cacheItem, error) {
+	cItem, ok := value.(*cacheItem)
+	if !ok {
+		return nil, errors.New("first element is number")
+	}
+
+	return cItem, nil
 }
