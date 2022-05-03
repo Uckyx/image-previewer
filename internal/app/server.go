@@ -3,34 +3,45 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
-	"image-previewer/pkg/cache"
 	"net"
 	"net/http"
 	"time"
 
-	"image-previewer/pkg/imagePreviewer"
+	"github.com/gorilla/mux"
+	"github.com/rs/zerolog"
+	"image-previewer/internal/handler"
+	"image-previewer/pkg/cache"
+	"image-previewer/pkg/image_previewer"
 )
 
 const CacheCapacity = 100
 
 type Server struct {
-	app    imagePreviewer.Service
+	svc    image_previewer.Service
+	logger zerolog.Logger
 	router *mux.Router
 }
 
-func NewServer() (*Server, error) {
-	svc := imagePreviewer.NewApp(
+func NewServer(logger zerolog.Logger) (*Server, error) {
+	svc := image_previewer.NewApp(
+		logger,
 		cache.NewCache(CacheCapacity),
+		image_previewer.NewImageDownloader(logger),
+		image_previewer.NewImageResizer(logger),
 	)
 
 	srv := &Server{
-		app: svc,
+		svc:    svc,
+		logger: logger,
 	}
 
 	srv.createRoute()
 
 	return srv, nil
+}
+
+func (s *Server) WithLogger(logger zerolog.Logger) {
+	s.logger = logger
 }
 
 func (s *Server) Listen(ctx context.Context, port int) error {
@@ -47,16 +58,11 @@ func (s *Server) Listen(ctx context.Context, port int) error {
 	return httpSrv.ListenAndServe()
 }
 
-func (s *Server) Fill(w http.ResponseWriter, r *http.Request) {
-	err := s.app.Fill(w, r)
-	if err != nil {
-		return
-	}
-}
-
 func (s *Server) createRoute() {
 	r := mux.NewRouter()
-	r.HandleFunc("/fill/{width:[0-9]+}/{height:[0-9]+}/{imageUrl:.*}", s.Fill)
+	handlers := handler.NewHandlers(s.logger, s.svc)
+
+	r.HandleFunc("/fill/{width:[0-9]+}/{height:[0-9]+}/{imageUrl:.*}", handlers.FillHandler)
 	http.Handle("/", r)
 
 	s.router = r

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -12,18 +13,20 @@ var shaCommit = "local"
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	l := log.With().Str("sha_commit", shaCommit).Logger()
+	logger := log.With().Str("sha_commit", shaCommit).Logger()
 
 	viper.SetConfigFile(".env")
 	err := viper.ReadInConfig()
 	if err != nil {
-		l.Fatal().Err(err).Msg("Не удалось загрузить файл env")
+		logger.Fatal().Err(err).Msg("Не удалось загрузить файл env")
 	}
 
-	srv, err := app.NewServer()
+	srv, err := app.NewServer(logger)
 	if err != nil {
-		l.Fatal().Err(err).Msg("Ошибка старта сервера")
+		logger.Fatal().Err(err).Msg("Ошибка старта сервера")
 	}
+
+	srv.WithLogger(logger)
 
 	listenPort, ok := viper.Get("LISTEN_PORT").(int)
 	if !ok {
@@ -32,6 +35,6 @@ func main() {
 
 	ctx := log.Logger.WithContext(context.Background())
 	if err := srv.Listen(ctx, listenPort); err != nil {
-		l.Fatal().Err(err).Msg("Не удалось прослушать порт")
+		logger.Fatal().Err(err).Msg("Не удалось прослушать порт")
 	}
 }
