@@ -39,24 +39,36 @@ type service struct {
 	imageResizer    ImageResizer
 }
 
-// Fill todo переписать на dto если получится
 func (s *service) Fill(ctx context.Context, width int, height int, url string) ([]byte, error) {
-	//todo Проверить кеш На наличие оригинальной картинки
+	rCacheKey := s.cache.GenerateResizedImgKey(url, width, height)
+	img, ok := s.cache.Get(rCacheKey)
 
-	img, err := s.imageDownloader.Download(ctx, url)
-	if err != nil {
-		s.logger.Err(err).Msg("не удалось скачать файл с удаленного сервера")
-		return nil, err
+	if ok {
+		return img, nil
 	}
 
-	//todo проверить кеш на наличие обрезанной картинки
+	oCacheKey := s.cache.GenerateOriginalImgKey(url)
+	oImg, ok := s.cache.Get(oCacheKey)
 
-	rImg, err := s.imageResizer.Resize(ctx, img, width, height)
+	if !ok {
+		dImg, err := s.imageDownloader.Download(ctx, url)
+		if err != nil {
+			s.logger.Err(err).Msg("не удалось скачать файл с удаленного сервера")
+			return nil, err
+		}
+
+		s.cache.Set(oCacheKey, dImg)
+
+		oImg = dImg
+	}
+
+	rImg, err := s.imageResizer.Resize(ctx, oImg, width, height)
 	if err != nil {
 		s.logger.Err(err).Msg("не удалось изменить размер изображения")
 		return nil, err
 	}
 
-	//todo Положить в кеш
+	s.cache.Set(rCacheKey, rImg)
+
 	return rImg, nil
 }

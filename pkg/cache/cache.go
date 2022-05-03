@@ -1,35 +1,39 @@
 package cache
 
-import "errors"
-
-type Key string
+import (
+	"crypto/md5"
+	"errors"
+	"fmt"
+)
 
 type Cache interface {
-	Set(key Key, value interface{}) bool
-	Get(key Key) (interface{}, bool)
+	Set(key string, value []byte) bool
+	Get(key string) ([]byte, bool)
+	GenerateOriginalImgKey(url string) string
+	GenerateResizedImgKey(url string, width int, height int) string
 	Clear()
 }
 
 type lruCache struct {
 	capacity int
 	queue    List
-	items    map[Key]*ListItem
+	items    map[string]*ListItem
 }
 
 type cacheItem struct {
-	key   Key
-	value interface{}
+	key   string
+	value []byte
 }
 
 func NewCache(capacity int) Cache {
 	return &lruCache{
 		capacity: capacity,
 		queue:    NewList(),
-		items:    make(map[Key]*ListItem, capacity),
+		items:    make(map[string]*ListItem, capacity),
 	}
 }
 
-func (lc *lruCache) Set(key Key, value interface{}) bool {
+func (lc *lruCache) Set(key string, value []byte) bool {
 	cItem := &cacheItem{key: key, value: value}
 	if listItem, ok := lc.items[key]; ok {
 		listItem.Value = cItem
@@ -54,7 +58,7 @@ func (lc *lruCache) Set(key Key, value interface{}) bool {
 	return false
 }
 
-func (lc *lruCache) Get(key Key) (interface{}, bool) {
+func (lc *lruCache) Get(key string) ([]byte, bool) {
 	if listItem, ok := lc.items[key]; ok {
 		lc.queue.MoveToFront(listItem)
 
@@ -74,6 +78,20 @@ func (lc *lruCache) Clear() {
 	for item := range lc.items {
 		delete(lc.items, item)
 	}
+}
+
+func (lc *lruCache) GenerateOriginalImgKey(url string) string {
+	h := md5.New()
+
+	return fmt.Sprintf("%x", h.Sum([]byte(url)))
+}
+
+func (lc *lruCache) GenerateResizedImgKey(url string, width int, height int) string {
+	h := md5.New()
+
+	convertedString := fmt.Sprintf("%s%d%d", url, width, height)
+
+	return fmt.Sprintf("%x", h.Sum([]byte(convertedString)))
 }
 
 func convertToCacheItem(value interface{}) (*cacheItem, error) {
