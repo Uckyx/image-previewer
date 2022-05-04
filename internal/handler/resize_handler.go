@@ -12,15 +12,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type FillRequest struct {
+type ResizeRequest struct {
 	width  int
 	height int
 	url    string
 }
 
-func (h *Handlers) FillHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	request := &FillRequest{}
+	request := &ResizeRequest{}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
 
 	err := h.createRequest(vars, request)
@@ -31,7 +31,7 @@ func (h *Handlers) FillHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	img, err := h.svc.Fill(ctx, request.width, request.height, request.url)
+	img, err := h.svc.Resize(ctx, request.width, request.height, request.url)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		h.logger.Err(err).Msg("не удалось обработать картинку")
@@ -47,7 +47,7 @@ func (h *Handlers) FillHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handlers) createRequest(vars map[string]string, r *FillRequest) (err error) {
+func (h *Handlers) createRequest(vars map[string]string, r *ResizeRequest) (err error) {
 	if r.width, err = strconv.Atoi(vars["width"]); err != nil {
 		return errors.New("поле width должно быть целочисленным")
 	}

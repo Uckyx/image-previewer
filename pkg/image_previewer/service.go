@@ -23,7 +23,7 @@ func NewApp(
 }
 
 type Service interface {
-	Fill(ctx context.Context, width int, height int, url string) ([]byte, error)
+	Resize(ctx context.Context, width int, height int, url string) ([]byte, error)
 }
 
 type Request struct {
@@ -39,7 +39,7 @@ type service struct {
 	imageResizer    ImageResizer
 }
 
-func (s *service) Fill(ctx context.Context, width int, height int, url string) ([]byte, error) {
+func (s *service) Resize(ctx context.Context, width int, height int, url string) ([]byte, error) {
 	rCacheKey := s.cache.GenerateResizedImgKey(url, width, height)
 	img, ok := s.cache.Get(rCacheKey)
 

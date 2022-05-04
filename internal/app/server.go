@@ -62,7 +62,7 @@ func (s *Server) createRoute() {
 	r := mux.NewRouter()
 	handlers := handler.NewHandlers(s.logger, s.svc)
 
-	r.HandleFunc("/fill/{width:[0-9]+}/{height:[0-9]+}/{imageUrl:.*}", handlers.FillHandler)
+	r.HandleFunc("/resize/{width:[0-9]+}/{height:[0-9]+}/{imageUrl:.*}", handlers.ResizeHandler)
 	http.Handle("/", r)
 
 	s.router = r
