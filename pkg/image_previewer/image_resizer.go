@@ -33,14 +33,14 @@ func (ir *imageResizer) Resize(
 	width int,
 	height int,
 ) (resizedImg []byte, err error) {
-	currentTimeStamp, err := fmt.Println(time.Now().Format(time.RFC850))
+	currentTimeStamp, err := fmt.Println(time.Now().Unix())
 	if err != nil {
 		return nil, err
 	}
 
-	rImgName := fmt.Sprintf("image_%d_resized.jpg", currentTimeStamp)
+	imgName := fmt.Sprintf("image_%d_resized.jpg", currentTimeStamp)
 
-	file, err := os.Create(rImgName)
+	file, err := os.Create(imgName)
 	if err != nil {
 		ir.logger.Err(err).Msg(err.Error())
 	}
@@ -57,25 +57,28 @@ func (ir *imageResizer) Resize(
 		if err != nil {
 			ir.logger.Err(err).Msg(err.Error())
 		}
-	}(rImgName)
+	}(imgName)
 
 	_, err = io.Copy(file, bytes.NewReader(originalImg))
 	if err != nil {
 		ir.logger.Err(err).Msg(err.Error())
 	}
 
-	src, err := imaging.Open(rImgName)
+	src, err := imaging.Open(imgName)
 	if err != nil {
 		return nil, err
 	}
 
-	rImg := imaging.Resize(src, width, height, imaging.Lanczos)
+	img := imaging.Resize(src, width, height, imaging.Lanczos)
 	if err != nil {
 		return nil, err
 	}
 
 	imgBuffer := new(bytes.Buffer)
-	err = jpeg.Encode(imgBuffer, rImg, nil)
+	err = jpeg.Encode(imgBuffer, img, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return imgBuffer.Bytes(), nil
 }

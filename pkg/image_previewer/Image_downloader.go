@@ -10,11 +10,10 @@ import (
 )
 
 var (
-	ErrTimeout         = fmt.Errorf("timeout on download img")
-	ErrRequest         = fmt.Errorf("generate request error")
-	ErrUnknownImgType  = fmt.Errorf("unknown file type uploaded")
-	ErrReadingResponse = fmt.Errorf("error reading response")
-	ErrResponseStatus  = fmt.Errorf("response status code not 200")
+	ErrTimeout        = fmt.Errorf("timeout on download img")
+	ErrRequest        = fmt.Errorf("generate request error")
+	ErrUnknownImgType = fmt.Errorf("unknown file type uploaded")
+	ErrResponseStatus = fmt.Errorf("response status code not 200")
 )
 
 type ImageDownloader interface {
@@ -65,7 +64,7 @@ func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (imgRes
 
 	responseImg, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, ErrReadingResponse
+		return nil, err
 	}
 
 	err = validateImageType(responseImg)
@@ -73,7 +72,7 @@ func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (imgRes
 		return nil, err
 	}
 
-	return &DownloadResponse{img: responseImg, headers: resp.Header}, nil
+	return &DownloadResponse{responseImg, resp.Header}, nil
 }
 
 func validateImageType(img []byte) error {

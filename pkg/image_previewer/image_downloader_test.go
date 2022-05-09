@@ -1,18 +1,13 @@
 package image_previewer
 
 import (
-	"bufio"
 	"context"
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"os"
 	"reflect"
 	"testing"
 	"time"
 )
-
-const ImageURL = "https://raw.githubusercontent.com/OtusGolang/final_project/master/examples/image-previewer/"
 
 func TestDownload_Positive(t *testing.T) {
 	ctx := context.Background()
@@ -25,7 +20,7 @@ func TestDownload_Positive(t *testing.T) {
 		{
 			name:    "success_download_img",
 			ctx:     ctx,
-			imgName: "_gopher_original_1024x504.jpg",
+			imgName: OriginalImgName,
 		},
 	}
 
@@ -41,8 +36,8 @@ func TestDownload_Positive(t *testing.T) {
 			}
 
 			wantImg := loadImage(tt.imgName)
-			if !reflect.DeepEqual(gotImg, wantImg) {
-				t.Errorf("Download() gotImg = %v, want %v", gotImg, wantImg)
+			if !reflect.DeepEqual(gotImg.img, wantImg) {
+				t.Errorf("Download() gotImg = %v, want %v", gotImg.img, wantImg)
 			}
 		})
 	}
@@ -63,14 +58,14 @@ func TestDownload_Negative(t *testing.T) {
 		{
 			name:    "timeout_case",
 			ctx:     ctxWithTimeOut,
-			imgName: "_gopher_original_1024x504.jpg",
+			imgName: OriginalImgName,
 			url:     ImageURL,
 			err:     ErrTimeout,
 		},
 		{
 			name:    "not_allowed_type_img_case",
 			ctx:     ctx,
-			imgName: "_gopher_original_1024x504.png",
+			imgName: OriginalImgName,
 			url:     ImageURL,
 			err:     ErrUnknownImgType,
 		},
@@ -92,28 +87,4 @@ func TestDownload_Negative(t *testing.T) {
 			require.Errorf(t, err, tt.err.Error())
 		})
 	}
-}
-
-func loadImage(imgName string) []byte {
-	fileToBeUploaded := "./image_test/" + imgName
-	file, err := os.Open(fileToBeUploaded)
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	defer file.Close()
-
-	fileInfo, _ := file.Stat()
-	bytes := make([]byte, fileInfo.Size())
-
-	buffer := bufio.NewReader(file)
-	_, err = buffer.Read(bytes)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	return bytes
 }
