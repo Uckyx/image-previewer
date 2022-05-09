@@ -45,7 +45,20 @@ func (ir *imageResizer) Resize(
 	if err != nil {
 		ir.logger.Err(err).Msg("не удалось создать файл")
 	}
-	defer file.Close()
+
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			ir.logger.Err(err).Msg("не удалось закрыть файл")
+		}
+	}(file)
+
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			ir.logger.Err(err).Msg("не удалось удалить временный файл")
+		}
+	}(rImgName)
 
 	_, err = io.Copy(file, bytes.NewReader(originalImg))
 	if err != nil {

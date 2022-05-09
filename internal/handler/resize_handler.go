@@ -21,7 +21,9 @@ type ResizeRequest struct {
 func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	request := &ResizeRequest{}
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
 
 	err := h.createRequest(vars, request)
 	if err != nil {
@@ -31,19 +33,19 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	img, err := h.svc.Resize(ctx, request.width, request.height, request.url)
+	imgResponse, err := h.svc.Resize(ctx, request.width, request.height, request.url)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
-		h.logger.Err(err).Msg("не удалось обработать картинку")
+		h.logger.Err(err).Msg(err.Error())
 
 		return
 	}
 
 	w.Header().Set("Content-Type", "image/jpeg")
-	w.Header().Set("Content-Length", strconv.Itoa(len(img)))
-	if _, err := w.Write(img); err != nil {
+	w.Header().Set("Content-Length", strconv.Itoa(len(imgResponse)))
+	if _, err := w.Write(imgResponse); err != nil {
 		w.WriteHeader(http.StatusBadGateway)
-		h.logger.Error().Msg("Невозможно обработать изображение")
+		h.logger.Err(err).Msg(err.Error())
 	}
 }
 

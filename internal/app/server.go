@@ -40,10 +40,6 @@ func NewServer(logger zerolog.Logger) (*Server, error) {
 	return srv, nil
 }
 
-func (s *Server) WithLogger(logger zerolog.Logger) {
-	s.logger = logger
-}
-
 func (s *Server) Listen(ctx context.Context, port int) error {
 	httpSrv := http.Server{
 		Addr:         fmt.Sprintf(":%d", port),

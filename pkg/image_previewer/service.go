@@ -26,12 +26,6 @@ type Service interface {
 	Resize(ctx context.Context, width int, height int, url string) ([]byte, error)
 }
 
-type Request struct {
-	height int
-	width  int
-	url    string
-}
-
 type service struct {
 	logger          zerolog.Logger
 	cache           cache.Cache
@@ -53,7 +47,7 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 	if !ok {
 		dImg, err := s.imageDownloader.Download(ctx, url)
 		if err != nil {
-			s.logger.Err(err).Msg("не удалось скачать файл с удаленного сервера")
+			s.logger.Err(err).Msg(err.Error())
 			return nil, err
 		}
 
@@ -64,7 +58,7 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 
 	rImg, err := s.imageResizer.Resize(ctx, oImg, width, height)
 	if err != nil {
-		s.logger.Err(err).Msg("не удалось изменить размер изображения")
+		s.logger.Err(err).Msg(err.Error())
 		return nil, err
 	}
 

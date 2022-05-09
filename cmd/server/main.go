@@ -26,8 +26,6 @@ func main() {
 		logger.Fatal().Err(err).Msg("Ошибка старта сервера")
 	}
 
-	srv.WithLogger(logger)
-
 	listenPort, ok := viper.Get("LISTEN_PORT").(int)
 	if !ok {
 		listenPort = 8090
