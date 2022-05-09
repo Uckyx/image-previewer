@@ -3,7 +3,6 @@ package image_previewer
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"image/jpeg"
 	"io"
@@ -36,33 +35,33 @@ func (ir *imageResizer) Resize(
 ) (resizedImg []byte, err error) {
 	currentTimeStamp, err := fmt.Println(time.Now().Format(time.RFC850))
 	if err != nil {
-		return nil, errors.New("не удалось получить текущее время для названия файла")
+		return nil, err
 	}
 
 	rImgName := fmt.Sprintf("image_%d_resized.jpg", currentTimeStamp)
 
 	file, err := os.Create(rImgName)
 	if err != nil {
-		ir.logger.Err(err).Msg("не удалось создать файл")
+		ir.logger.Err(err).Msg(err.Error())
 	}
 
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-			ir.logger.Err(err).Msg("не удалось закрыть файл")
+			ir.logger.Err(err).Msg(err.Error())
 		}
 	}(file)
 
 	defer func(name string) {
 		err := os.Remove(name)
 		if err != nil {
-			ir.logger.Err(err).Msg("не удалось удалить временный файл")
+			ir.logger.Err(err).Msg(err.Error())
 		}
 	}(rImgName)
 
 	_, err = io.Copy(file, bytes.NewReader(originalImg))
 	if err != nil {
-		ir.logger.Err(err).Msg("не удалось записать в файл")
+		ir.logger.Err(err).Msg(err.Error())
 	}
 
 	src, err := imaging.Open(rImgName)
@@ -72,7 +71,7 @@ func (ir *imageResizer) Resize(
 
 	rImg := imaging.Resize(src, width, height, imaging.Lanczos)
 	if err != nil {
-		return nil, errors.New("не удалось сохранить обрезанную картинку")
+		return nil, err
 	}
 
 	imgBuffer := new(bytes.Buffer)

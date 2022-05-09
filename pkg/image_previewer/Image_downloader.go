@@ -80,7 +80,7 @@ func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (img []
 		return nil, err
 	}
 
-	return nil, nil
+	return responseImg, nil
 }
 
 func validateImageType(img []byte) error {
