@@ -3,12 +3,10 @@ package image_previewer
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
-
-	"github.com/rs/zerolog"
 )
 
 var (
@@ -20,10 +18,10 @@ var (
 )
 
 type ImageDownloader interface {
-	Download(ctx context.Context, imageUrl string) (img []byte, err error)
+	Download(ctx context.Context, imageUrl string) (imgResponse *DownloadResponse, err error)
 }
 
-type ImageResponse struct {
+type DownloadResponse struct {
 	img     []byte
 	headers map[string][]string
 }
@@ -38,9 +36,7 @@ func NewImageDownloader(logger zerolog.Logger) ImageDownloader {
 	}
 }
 
-func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (img []byte, err error) {
-	client := http.Client{}
-
+func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (imgResponse *DownloadResponse, err error) {
 	req, err := http.NewRequest(http.MethodGet, imageUrl, nil)
 	if err != nil {
 		i.logger.Err(err).Msg(ErrRequest.Error())
@@ -48,12 +44,9 @@ func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (img []
 		return nil, err
 	}
 
+	client := http.Client{}
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		if networkErr, ok := err.(net.Error); ok && networkErr.Timeout() {
-			return nil, ErrTimeout
-		}
-
 		i.logger.Err(err).Msg(err.Error())
 
 		return nil, err
@@ -80,7 +73,7 @@ func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (img []
 		return nil, err
 	}
 
-	return responseImg, nil
+	return &DownloadResponse{img: responseImg, headers: resp.Header}, nil
 }
 
 func validateImageType(img []byte) error {

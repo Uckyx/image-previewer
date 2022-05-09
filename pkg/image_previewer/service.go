@@ -22,8 +22,13 @@ func NewApp(
 	}
 }
 
+type ResizeResponse struct {
+	Img     []byte
+	Headers map[string][]string
+}
+
 type Service interface {
-	Resize(ctx context.Context, width int, height int, url string) ([]byte, error)
+	Resize(ctx context.Context, width int, height int, url string) (*ResizeResponse, error)
 }
 
 type service struct {
@@ -33,36 +38,47 @@ type service struct {
 	imageResizer    ImageResizer
 }
 
-func (s *service) Resize(ctx context.Context, width int, height int, url string) ([]byte, error) {
-	rCacheKey := s.cache.GenerateResizedImgKey(url, width, height)
-	img, ok := s.cache.Get(rCacheKey)
+func (s *service) Resize(ctx context.Context, width int, height int, url string) (*ResizeResponse, error) {
+	resizedImgKey := s.cache.GenerateResizedImgKey(url, width, height)
+	resizedImg, ok := s.cache.Get(resizedImgKey)
 
 	if ok {
-		return img, nil
+		return &ResizeResponse{resizedImg, nil}, nil
 	}
 
-	oCacheKey := s.cache.GenerateOriginalImgKey(url)
-	oImg, ok := s.cache.Get(oCacheKey)
+	originalImgKey := s.cache.GenerateOriginalImgKey(url)
+	originalImg, ok := s.cache.Get(originalImgKey)
 
-	if !ok {
-		dImg, err := s.imageDownloader.Download(ctx, url)
+	if ok {
+		resizedImg, err := s.imageResizer.Resize(ctx, originalImg, width, height)
 		if err != nil {
 			s.logger.Err(err).Msg(err.Error())
+
 			return nil, err
 		}
 
-		s.cache.Set(oCacheKey, dImg)
+		go s.cache.Set(resizedImgKey, resizedImg)
 
-		oImg = dImg
+		return &ResizeResponse{resizedImg, nil}, nil
 	}
 
-	rImg, err := s.imageResizer.Resize(ctx, oImg, width, height)
+	downloadResponse, err := s.imageDownloader.Download(ctx, url)
 	if err != nil {
 		s.logger.Err(err).Msg(err.Error())
+
 		return nil, err
 	}
 
-	s.cache.Set(rCacheKey, rImg)
+	go s.cache.Set(originalImgKey, downloadResponse.img)
 
-	return rImg, nil
+	resizedImg, err = s.imageResizer.Resize(ctx, downloadResponse.img, width, height)
+	if err != nil {
+		s.logger.Err(err).Msg(err.Error())
+
+		return nil, err
+	}
+
+	go s.cache.Set(resizedImgKey, resizedImg)
+
+	return &ResizeResponse{resizedImg, downloadResponse.headers}, nil
 }

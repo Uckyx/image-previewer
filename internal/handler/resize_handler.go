@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,6 +9,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+)
+
+var (
+	ErrIsNumeric = fmt.Errorf("field must be number")
 )
 
 type ResizeRequest struct {
@@ -28,12 +31,12 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	err := h.createRequest(vars, request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		h.logger.Err(err).Msg("не удалось сформировать реквест")
+		h.logger.Err(err).Msg(err.Error())
 
 		return
 	}
 
-	imgResponse, err := h.svc.Resize(ctx, request.width, request.height, request.url)
+	resizeResponse, err := h.svc.Resize(ctx, request.width, request.height, request.url)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		h.logger.Err(err).Msg(err.Error())
@@ -41,9 +44,14 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/jpeg")
-	w.Header().Set("Content-Length", strconv.Itoa(len(imgResponse)))
-	if _, err := w.Write(imgResponse); err != nil {
+	for name, values := range resizeResponse.Headers {
+		for _, value := range values {
+			w.Header().Add(name, value)
+		}
+	}
+
+	w.Header().Set("Content-Length", strconv.Itoa(len(resizeResponse.Img)))
+	if _, err := w.Write(resizeResponse.Img); err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		h.logger.Err(err).Msg(err.Error())
 	}
@@ -51,15 +59,15 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) createRequest(vars map[string]string, r *ResizeRequest) (err error) {
 	if r.width, err = strconv.Atoi(vars["width"]); err != nil {
-		return errors.New("поле width должно быть целочисленным")
+		return ErrIsNumeric
 	}
 	if r.height, err = strconv.Atoi(vars["height"]); err != nil {
-		return errors.New("поле width должно быть целочисленным")
+		return ErrIsNumeric
 	}
 
 	parsedUrl, err := url.Parse(vars["imageUrl"])
 	if err != nil {
-		return errors.New("не корректный формат ссылки для скачивания картинки")
+		return err
 	}
 
 	r.url = parsedUrl.String()
