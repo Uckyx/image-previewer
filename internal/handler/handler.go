@@ -1,18 +1,19 @@
 package handler
 
 import (
+	"image-previewer/pkg/imagepreviewer"
+
 	"github.com/rs/zerolog"
-	"image-previewer/pkg/image_previewer"
 )
 
 type Handlers struct {
 	logger zerolog.Logger
-	svc    image_previewer.Service
+	svc    imagepreviewer.Service
 }
 
 func NewHandlers(
 	logger zerolog.Logger,
-	svc image_previewer.Service,
+	svc imagepreviewer.Service,
 ) *Handlers {
 	return &Handlers{logger: logger, svc: svc}
 }

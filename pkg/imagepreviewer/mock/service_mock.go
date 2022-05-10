@@ -6,7 +6,7 @@ package mock_image_previewer
 
 import (
 	context "context"
-	image_previewer "image-previewer/pkg/image_previewer"
+	image_previewer "image-previewer/pkg/imagepreviewer"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"crypto/md5"
 	"errors"
 	"fmt"
 )
@@ -81,17 +80,11 @@ func (lc *lruCache) Clear() {
 }
 
 func (lc *lruCache) GenerateOriginalImgKey(url string) string {
-	h := md5.New()
-
-	return fmt.Sprintf("%x", h.Sum([]byte(url)))
+	return url
 }
 
 func (lc *lruCache) GenerateResizedImgKey(url string, width int, height int) string {
-	h := md5.New()
-
-	convertedString := fmt.Sprintf("%s%d%d", url, width, height)
-
-	return fmt.Sprintf("%x", h.Sum([]byte(convertedString)))
+	return fmt.Sprintf("%s%d%d", url, width, height)
 }
 
 func convertToCacheItem(value interface{}) (*cacheItem, error) {

@@ -1,4 +1,4 @@
-package image_previewer
+package imagepreviewer
 
 import (
 	"context"

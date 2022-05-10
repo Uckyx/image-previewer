@@ -1,11 +1,12 @@
-package image_previewer
+package imagepreviewer
 
 import "testing"
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"reflect"
+
+	"github.com/rs/zerolog/log"
 )
 
 func Test_Positive(t *testing.T) {

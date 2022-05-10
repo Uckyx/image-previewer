@@ -2,15 +2,14 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
-var (
-	ErrIsNumeric = fmt.Errorf("field must be number")
-)
+var ErrIsNumeric = fmt.Errorf("field must be number")
 
 type ResizeRequest struct {
 	width  int
@@ -45,7 +44,7 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Length", strconv.Itoa(len(resizeResponse.Img)))
 	if _, err := w.Write(resizeResponse.Img); err != nil {
-		w.WriteHeader(http.StatusBadGateway)
+		w.WriteHeader(http.StatusInternalServerError)
 		h.logger.Err(err).Msg(err.Error())
 	}
 }
@@ -61,14 +60,14 @@ func (h *Handlers) createRequest(vars map[string]string) (r *ResizeRequest, err 
 		return nil, ErrIsNumeric
 	}
 
-	parsedUrl, err := url.Parse(vars["imageUrl"])
+	parsedURL, err := url.Parse(vars["imageUrl"])
 	if err != nil {
 		return nil, err
 	}
 
-	r.url = parsedUrl.String()
-	if parsedUrl.Scheme == "" {
-		r.url = fmt.Sprintf("https://%s", parsedUrl.String())
+	r.url = parsedURL.String()
+	if parsedURL.Scheme == "" {
+		r.url = fmt.Sprintf("https://%s", parsedURL.String())
 	}
 
 	return r, nil

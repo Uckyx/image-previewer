@@ -1,23 +1,22 @@
-package image_previewer
+package imagepreviewer
 
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog"
-	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/rs/zerolog"
 )
 
 var (
 	ErrTimeout        = fmt.Errorf("timeout on download img")
-	ErrRequest        = fmt.Errorf("generate request error")
 	ErrUnknownImgType = fmt.Errorf("unknown file type uploaded")
 	ErrResponseStatus = fmt.Errorf("response status code not 200")
 )
 
 type ImageDownloader interface {
-	Download(ctx context.Context, imageUrl string) (imgResponse *DownloadResponse, err error)
+	Download(ctx context.Context, imageURL string) (imgResponse *DownloadResponse, err error)
 }
 
 type DownloadResponse struct {
@@ -35,8 +34,8 @@ func NewImageDownloader(logger zerolog.Logger) ImageDownloader {
 	}
 }
 
-func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (imgResponse *DownloadResponse, err error) {
-	req, err := http.NewRequest(http.MethodGet, imageUrl, nil)
+func (i *imageDownloader) Download(ctx context.Context, imageURL string) (imgResponse *DownloadResponse, err error) {
+	req, err := http.NewRequest(http.MethodGet, imageURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +50,6 @@ func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (imgRes
 		return nil, ErrResponseStatus
 	}
 
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			i.logger.Err(err).Msg(err.Error())
-		}
-	}(resp.Body)
-
 	responseImg, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -65,6 +57,10 @@ func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (imgRes
 
 	err = validateImageType(responseImg)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := resp.Body.Close(); err != nil {
 		return nil, err
 	}
 

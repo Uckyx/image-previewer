@@ -1,15 +1,16 @@
-package image_previewer
+package imagepreviewer
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 )
 
-func TestDownload_Positive(t *testing.T) {
+func Test_Download_Positive(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
@@ -43,7 +44,7 @@ func TestDownload_Positive(t *testing.T) {
 	}
 }
 
-func TestDownload_Negative(t *testing.T) {
+func Test_Download_Negative(t *testing.T) {
 	ctx := context.Background()
 	ctxWithTimeOut, closefn := context.WithTimeout(ctx, time.Microsecond*1)
 	defer closefn()

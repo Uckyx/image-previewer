@@ -18,21 +18,21 @@ func main() {
 	viper.SetConfigFile(".env")
 	err := viper.ReadInConfig()
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Не удалось загрузить файл env")
+		logger.Info().Err(err).Msg("Не удалось загрузить файл env")
 	}
 
-	srv, err := app.NewServer(logger)
+	cacheCapacity, ok := viper.Get("CACHE_CAPACITY").(int)
+	if !ok {
+		cacheCapacity = 100
+	}
+
+	srv, err := app.NewServer(logger, cacheCapacity)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Ошибка старта сервера")
 	}
 
-	listenPort, ok := viper.Get("LISTEN_PORT").(int)
-	if !ok {
-		listenPort = 8090
-	}
-
 	ctx := log.Logger.WithContext(context.Background())
-	if err := srv.Listen(ctx, listenPort); err != nil {
+	if err := srv.Listen(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("Не удалось прослушать порт")
 	}
 }

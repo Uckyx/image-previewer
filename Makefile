@@ -1,3 +1,15 @@
+ifeq ($(OS),Windows_NT)
+    GOOS := windows
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        GOOS := linux
+    endif
+    ifeq ($(UNAME_S),Darwin)
+        GOOS := darwin
+    endif
+endif
+
 CI_COMMIT_SHA ?= local
 CGO_ENABLED = 0
 GOARCH = amd64
@@ -11,7 +23,7 @@ echo:
 
 .PHONY: test
 test:
-	go test -p 1 -v -race ./...
+	go test -v -count=100 -race -timeout=5m ./...
 
 .PHONY: test-coverage
 test-coverage:
@@ -22,6 +34,14 @@ test-coverage:
 lint:
 	golangci-lint run --color always --timeout 30m 2>/dev/null
 
-.PHONY: build-server
-build-server:
-	$(GO_BUILD) -o ./bin/server ./cmd/server
+.PHONY: docker-up
+docker-up:
+	make build && docker-compose up -d
+
+.PHONY: docker-down
+docker-down:
+	docker-compose down
+
+.PHONY: build
+build:
+	$(GO_BUILD) -mod vendor -trimpath -o ./bin/server ./cmd/server
