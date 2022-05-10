@@ -2,6 +2,7 @@ package image_previewer
 
 import (
 	"context"
+	"sync"
 
 	"image-previewer/pkg/cache"
 
@@ -36,6 +37,7 @@ type service struct {
 	cache           cache.Cache
 	imageDownloader ImageDownloader
 	imageResizer    ImageResizer
+	w               sync.WaitGroup
 }
 
 func (s *service) Resize(ctx context.Context, width int, height int, url string) (*ResizeResponse, error) {
@@ -57,7 +59,7 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 			return nil, err
 		}
 
-		go s.cache.Set(resizedImgKey, resizedImg)
+		s.asyncCacheWrite(resizedImgKey, resizedImg)
 
 		return &ResizeResponse{resizedImg, nil}, nil
 	}
@@ -69,7 +71,7 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 		return nil, err
 	}
 
-	go s.cache.Set(originalImgKey, downloadResponse.img)
+	s.asyncCacheWrite(originalImgKey, downloadResponse.img)
 
 	resizedImg, err = s.imageResizer.Resize(ctx, downloadResponse.img, width, height)
 	if err != nil {
@@ -78,7 +80,18 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 		return nil, err
 	}
 
-	go s.cache.Set(resizedImgKey, resizedImg)
+	s.asyncCacheWrite(resizedImgKey, resizedImg)
 
 	return &ResizeResponse{resizedImg, downloadResponse.headers}, nil
+}
+
+func (s *service) asyncCacheWrite(key string, img []byte) {
+	s.w.Add(1)
+	go func() {
+		s.cache.Set(key, img)
+
+		s.w.Done()
+	}()
+
+	s.w.Wait()
 }

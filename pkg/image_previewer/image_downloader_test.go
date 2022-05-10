@@ -65,7 +65,7 @@ func TestDownload_Negative(t *testing.T) {
 		{
 			name:    "not_allowed_type_img_case",
 			ctx:     ctx,
-			imgName: OriginalImgName,
+			imgName: "gopher_256x126.png",
 			url:     ImageURL,
 			err:     ErrUnknownImgType,
 		},
