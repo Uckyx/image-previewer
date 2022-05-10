@@ -2,9 +2,9 @@ package image_previewer
 
 import (
 	"context"
-	"sync"
-
 	"image-previewer/pkg/cache"
+	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -41,6 +41,9 @@ type service struct {
 }
 
 func (s *service) Resize(ctx context.Context, width int, height int, url string) (*ResizeResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(1000)*time.Second)
+	defer cancel()
+
 	resizedImgKey := s.cache.GenerateResizedImgKey(url, width, height)
 	resizedImg, ok := s.cache.Get(resizedImgKey)
 
@@ -54,8 +57,6 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 	if ok {
 		resizedImg, err := s.imageResizer.Resize(ctx, originalImg, width, height)
 		if err != nil {
-			s.logger.Err(err).Msg(err.Error())
-
 			return nil, err
 		}
 
@@ -66,8 +67,6 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 
 	downloadResponse, err := s.imageDownloader.Download(ctx, url)
 	if err != nil {
-		s.logger.Err(err).Msg(err.Error())
-
 		return nil, err
 	}
 
@@ -75,8 +74,6 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 
 	resizedImg, err = s.imageResizer.Resize(ctx, downloadResponse.img, width, height)
 	if err != nil {
-		s.logger.Err(err).Msg(err.Error())
-
 		return nil, err
 	}
 

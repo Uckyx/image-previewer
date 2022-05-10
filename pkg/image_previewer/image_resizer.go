@@ -35,6 +35,8 @@ func (ir *imageResizer) Resize(
 ) (resizedImg []byte, err error) {
 	currentTimeStamp, err := fmt.Println(time.Now().Unix())
 	if err != nil {
+		ir.logger.Err(err).Msg(err.Error())
+
 		return nil, err
 	}
 
@@ -42,7 +44,7 @@ func (ir *imageResizer) Resize(
 
 	file, err := os.Create(imgName)
 	if err != nil {
-		ir.logger.Err(err).Msg(err.Error())
+		return nil, err
 	}
 
 	defer func(file *os.File) {
@@ -61,7 +63,7 @@ func (ir *imageResizer) Resize(
 
 	_, err = io.Copy(file, bytes.NewReader(originalImg))
 	if err != nil {
-		ir.logger.Err(err).Msg(err.Error())
+		return nil, err
 	}
 
 	src, err := imaging.Open(imgName)

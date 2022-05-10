@@ -38,16 +38,12 @@ func NewImageDownloader(logger zerolog.Logger) ImageDownloader {
 func (i *imageDownloader) Download(ctx context.Context, imageUrl string) (imgResponse *DownloadResponse, err error) {
 	req, err := http.NewRequest(http.MethodGet, imageUrl, nil)
 	if err != nil {
-		i.logger.Err(err).Msg(ErrRequest.Error())
-
 		return nil, err
 	}
 
 	client := http.Client{}
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		i.logger.Err(err).Msg(err.Error())
-
 		return nil, err
 	}
 

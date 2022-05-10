@@ -1,14 +1,11 @@
 package handler
 
 import (
-	"context"
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
-
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -23,12 +20,8 @@ type ResizeRequest struct {
 
 func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	request := &ResizeRequest{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
-
-	err := h.createRequest(vars, request)
+	request, err := h.createRequest(vars)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		h.logger.Err(err).Msg(err.Error())
@@ -36,7 +29,7 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resizeResponse, err := h.svc.Resize(ctx, request.width, request.height, request.url)
+	resizeResponse, err := h.svc.Resize(r.Context(), request.width, request.height, request.url)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		h.logger.Err(err).Msg(err.Error())
@@ -57,17 +50,20 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handlers) createRequest(vars map[string]string, r *ResizeRequest) (err error) {
+func (h *Handlers) createRequest(vars map[string]string) (r *ResizeRequest, err error) {
+	r = &ResizeRequest{}
+
 	if r.width, err = strconv.Atoi(vars["width"]); err != nil {
-		return ErrIsNumeric
+		return nil, ErrIsNumeric
 	}
+
 	if r.height, err = strconv.Atoi(vars["height"]); err != nil {
-		return ErrIsNumeric
+		return nil, ErrIsNumeric
 	}
 
 	parsedUrl, err := url.Parse(vars["imageUrl"])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	r.url = parsedUrl.String()
@@ -75,5 +71,5 @@ func (h *Handlers) createRequest(vars map[string]string, r *ResizeRequest) (err 
 		r.url = fmt.Sprintf("https://%s", parsedUrl.String())
 	}
 
-	return nil
+	return r, nil
 }

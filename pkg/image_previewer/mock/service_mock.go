@@ -6,6 +6,7 @@ package mock_image_previewer
 
 import (
 	context "context"
+	image_previewer "image-previewer/pkg/image_previewer"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,10 +36,10 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // Resize mocks base method.
-func (m *MockService) Resize(ctx context.Context, width, height int, url string) ([]byte, error) {
+func (m *MockService) Resize(ctx context.Context, width, height int, url string) (*image_previewer.ResizeResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Resize", ctx, width, height, url)
-	ret0, _ := ret[0].([]byte)
+	ret0, _ := ret[0].(*image_previewer.ResizeResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
