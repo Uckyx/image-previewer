@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - dev
+      - ci_coverage
 jobs:
   go_get:
     runs-on: ubuntu-latest
