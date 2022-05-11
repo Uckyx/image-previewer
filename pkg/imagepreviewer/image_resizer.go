@@ -35,8 +35,6 @@ func (ir *imageResizer) Resize(
 ) (resizedImg []byte, err error) {
 	currentTimeStamp, err := fmt.Println(time.Now().Unix())
 	if err != nil {
-		ir.logger.Err(err).Msg(err.Error())
-
 		return nil, err
 	}
 
@@ -72,9 +70,6 @@ func (ir *imageResizer) Resize(
 	}
 
 	img := imaging.Resize(src, width, height, imaging.Lanczos)
-	if err != nil {
-		return nil, err
-	}
 
 	imgBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(imgBuffer, img, nil)

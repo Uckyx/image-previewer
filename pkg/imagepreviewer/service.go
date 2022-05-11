@@ -29,7 +29,13 @@ type ResizeResponse struct {
 }
 
 type Service interface {
-	Resize(ctx context.Context, width int, height int, url string) (*ResizeResponse, error)
+	Resize(
+		ctx context.Context,
+		width int,
+		height int,
+		url string,
+		headers map[string][]string,
+	) (*ResizeResponse, error)
 }
 
 type service struct {
@@ -40,7 +46,13 @@ type service struct {
 	w               sync.WaitGroup
 }
 
-func (s *service) Resize(ctx context.Context, width int, height int, url string) (*ResizeResponse, error) {
+func (s *service) Resize(
+	ctx context.Context,
+	width int,
+	height int,
+	url string,
+	headers map[string][]string,
+) (*ResizeResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(1000)*time.Second)
 	defer cancel()
 
@@ -65,7 +77,7 @@ func (s *service) Resize(ctx context.Context, width int, height int, url string)
 		return &ResizeResponse{resizedImg, nil}, nil
 	}
 
-	downloadResponse, err := s.imageDownloader.Download(ctx, url)
+	downloadResponse, err := s.imageDownloader.Download(ctx, url, headers)
 	if err != nil {
 		return nil, err
 	}

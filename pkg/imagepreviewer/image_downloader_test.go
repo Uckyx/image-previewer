@@ -30,7 +30,7 @@ func Test_Download_Positive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotImg, err := id.Download(tt.ctx, ImageURL+tt.imgName)
+			gotImg, err := id.Download(tt.ctx, ImageURL+tt.imgName, nil)
 			if err != nil {
 				t.Errorf("Download() error = %v", err)
 				return
@@ -84,7 +84,7 @@ func Test_Download_Negative(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := id.Download(tt.ctx, tt.url+tt.imgName)
+			_, err := id.Download(tt.ctx, tt.url+tt.imgName, nil)
 			require.Errorf(t, err, tt.err.Error())
 		})
 	}

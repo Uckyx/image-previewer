@@ -113,3 +113,53 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 }
+
+func Test_lruCache_GenerateOriginalImgKey(t *testing.T) {
+	c := NewCache(10)
+
+	tests := []struct {
+		name string
+		url  string
+		want string
+	}{
+		{
+			name: "success_generate_original_key",
+			url:  "http://foo.bar",
+			want: "http://foo.bar",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := c.GenerateOriginalImgKey(tt.url); got != tt.want {
+				t.Errorf("GenerateOriginalImgKey() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_lruCache_GenerateResizedImgKey(t *testing.T) {
+	c := NewCache(10)
+
+	tests := []struct {
+		name   string
+		url    string
+		want   string
+		width  int
+		height int
+	}{
+		{
+			name:   "success_generate_resized_key",
+			url:    "http://foo.bar",
+			width:  500,
+			height: 500,
+			want:   "http://foo.bar500500",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := c.GenerateResizedImgKey(tt.url, tt.width, tt.height); got != tt.want {
+				t.Errorf("GenerateOriginalImgKey() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

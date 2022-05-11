@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOriginalImageInCache(t *testing.T) {
+func Test_service_Resize_OriginalImageInCache(t *testing.T) {
 	logger := log.With().Logger()
 	ctx := context.Background()
 
@@ -29,7 +29,7 @@ func TestOriginalImageInCache(t *testing.T) {
 	c.Set(key, img)
 
 	t.Run("get_original_img_from_cache_case", func(t *testing.T) {
-		gotImg, err := svc.Resize(ctx, 256, 126, ImageURL+OriginalImgName)
+		gotImg, err := svc.Resize(ctx, 256, 126, ImageURL+OriginalImgName, nil)
 		if err != nil {
 			t.Errorf("Resize() error = %v", err)
 			return
@@ -42,7 +42,7 @@ func TestOriginalImageInCache(t *testing.T) {
 	})
 }
 
-func TestResizedImageInCache(t *testing.T) {
+func Test_service_Resize_ResizedImageInCache(t *testing.T) {
 	logger := log.With().Logger()
 	ctx := context.Background()
 
@@ -61,7 +61,7 @@ func TestResizedImageInCache(t *testing.T) {
 	c.Set(key, img)
 
 	t.Run("get_resized_img_from_cache_case", func(t *testing.T) {
-		gotImg, err := svc.Resize(ctx, 256, 126, ImageURL+OriginalImgName)
+		gotImg, err := svc.Resize(ctx, 256, 126, ImageURL+OriginalImgName, nil)
 		if err != nil {
 			t.Errorf("Resize() error = %v", err)
 			return
@@ -74,7 +74,7 @@ func TestResizedImageInCache(t *testing.T) {
 	})
 }
 
-func TestRemoveImageInCache(t *testing.T) {
+func Test_service_Resize_RemoveImageInCache(t *testing.T) {
 	logger := log.With().Logger()
 	ctx := context.Background()
 
@@ -97,7 +97,7 @@ func TestRemoveImageInCache(t *testing.T) {
 	c.Set(resizedImgKey, resizedImg)
 
 	t.Run("remove_old_img_from_cache_case", func(t *testing.T) {
-		gotImg, err := svc.Resize(ctx, 333, 666, ImageURL+OriginalImgName)
+		gotImg, err := svc.Resize(ctx, 333, 666, ImageURL+OriginalImgName, nil)
 		if err != nil {
 			t.Errorf("Resize() error = %v", err)
 			return

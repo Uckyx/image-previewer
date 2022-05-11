@@ -16,7 +16,11 @@ var (
 )
 
 type ImageDownloader interface {
-	Download(ctx context.Context, imageURL string) (imgResponse *DownloadResponse, err error)
+	Download(
+		ctx context.Context,
+		imageURL string,
+		headers map[string][]string,
+	) (imgResponse *DownloadResponse, err error)
 }
 
 type DownloadResponse struct {
@@ -34,11 +38,17 @@ func NewImageDownloader(logger zerolog.Logger) ImageDownloader {
 	}
 }
 
-func (i *imageDownloader) Download(ctx context.Context, imageURL string) (imgResponse *DownloadResponse, err error) {
+func (i *imageDownloader) Download(
+	ctx context.Context,
+	imageURL string,
+	headers map[string][]string,
+) (imgResponse *DownloadResponse, err error) {
 	req, err := http.NewRequest(http.MethodGet, imageURL, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header = headers
 
 	client := http.Client{}
 	resp, err := client.Do(req.WithContext(ctx))

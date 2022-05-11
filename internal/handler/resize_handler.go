@@ -18,19 +18,19 @@ type ResizeRequest struct {
 }
 
 func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	request, err := h.createRequest(vars)
+	request, err := h.createRequest(mux.Vars(r))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("validation error"))
 		h.logger.Err(err).Msg(err.Error())
 
 		return
 	}
 
-	resizeResponse, err := h.svc.Resize(r.Context(), request.width, request.height, request.url)
+	resizeResponse, err := h.svc.Resize(r.Context(), request.width, request.height, request.url, r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
+		w.Write([]byte("resize image failed"))
 		h.logger.Err(err).Msg(err.Error())
 
 		return
@@ -50,25 +50,22 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) createRequest(vars map[string]string) (r *ResizeRequest, err error) {
-	r = &ResizeRequest{}
-
-	if r.width, err = strconv.Atoi(vars["width"]); err != nil {
+	width, err := strconv.Atoi(vars["width"])
+	if err != nil {
 		return nil, ErrIsNumeric
 	}
 
-	if r.height, err = strconv.Atoi(vars["height"]); err != nil {
+	height, err := strconv.Atoi(vars["height"])
+	if err != nil {
 		return nil, ErrIsNumeric
 	}
 
-	parsedURL, err := url.Parse(vars["imageUrl"])
+	imageURL, err := url.Parse(vars["imageURL"])
 	if err != nil {
 		return nil, err
 	}
 
-	r.url = parsedURL.String()
-	if parsedURL.Scheme == "" {
-		r.url = fmt.Sprintf("https://%s", parsedURL.String())
-	}
+	imageURL.Scheme = "http"
 
-	return r, nil
+	return &ResizeRequest{width: width, height: height, url: imageURL.String()}, nil
 }

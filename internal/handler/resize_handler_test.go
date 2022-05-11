@@ -2,8 +2,8 @@ package handler
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
-	imagepreviewermock "image-previewer/mocks/pkg/imagepreviewer"
 	"image-previewer/pkg/imagepreviewer"
 	"net/http"
 	"net/http/httptest"
@@ -18,11 +18,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var defaultImgURL = "http://raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
+
 func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockService := imagepreviewermock.NewMockService(ctrl)
+	mockService := imagepreviewer.NewMockService(ctrl)
 	logger := log.With().Logger()
 
 	image := loadImage("_gopher_original_1024x504.jpg")
@@ -32,18 +34,16 @@ func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 		width          int
 		height         int
 		url            string
-		uri            string
 		response       string
 		resizeResponse *imagepreviewer.ResizeResponse
 		responseCode   int
 		img            []byte
 	}{
 		{
-			name:           "status_ok",
+			name:           "ok_case",
 			width:          500,
 			height:         600,
-			url:            "https://raw.githubusercontent.com/",
-			uri:            "OtusGolang/final_project/master/examples/image-previewer_gopher_original_1024x504.jpg",
+			url:            defaultImgURL + "_gopher_original_1024x504.jpg",
 			response:       string(image),
 			resizeResponse: &imagepreviewer.ResizeResponse{Img: image},
 			responseCode:   http.StatusOK,
@@ -52,14 +52,15 @@ func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
+			tt := tt
+			req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
 			req = mux.SetURLVars(req, map[string]string{
 				"width":    strconv.Itoa(tt.width),
 				"height":   strconv.Itoa(tt.height),
-				"imageUrl": tt.url + tt.uri,
+				"imageURL": tt.url,
 			})
 
-			mockService.EXPECT().Resize(req.Context(), tt.width, tt.height, tt.url+tt.uri).Return(tt.resizeResponse, nil)
+			mockService.EXPECT().Resize(req.Context(), tt.width, tt.height, tt.url, req.Header).Return(tt.resizeResponse, nil)
 			h := &Handlers{
 				logger: logger,
 				svc:    mockService,
@@ -80,67 +81,74 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockService := imagepreviewermock.NewMockService(ctrl)
-	logger := log.With().Logger()
-
-	image1 := loadImage("_gopher_original_1024x504.jpg")
+	mockService := imagepreviewer.NewMockService(ctrl)
+	l := log.With().Logger()
 
 	tests := []struct {
 		name           string
-		width          int
-		height         int
+		width          string
+		height         string
 		url            string
-		uri            string
 		response       string
 		resizeResponse *imagepreviewer.ResizeResponse
-		responseCode   int
-		img            []byte
+		err            error
+		httpStatus     int
 	}{
 		{
-			name:           "bad",
-			width:          500,
-			height:         600,
-			url:            "https://raw.githubusercontent.com/",
-			uri:            "OtusGolang/final_project/master/examples/image-previewer_gopher_original_1024x504.jpg",
-			response:       string(image1),
-			resizeResponse: &imagepreviewer.ResizeResponse{Img: image1},
-			responseCode:   http.StatusOK,
-			img:            image1,
+			name:       "bad_request_case",
+			width:      "foo",
+			height:     "bar",
+			url:        defaultImgURL + "_gopher_original_1024x504.jpg",
+			response:   "validation error",
+			httpStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "success",
-			width:          500,
-			height:         600,
-			url:            "https://raw.githubusercontent.com/",
-			uri:            "OtusGolang/final_project/master/examples/image-previewer_gopher_original_1024x504.jpg",
-			response:       string(image1),
-			resizeResponse: &imagepreviewer.ResizeResponse{Img: image1},
-			responseCode:   http.StatusOK,
-			img:            image1,
+			name:           "bad_gateway_case",
+			width:          "300",
+			height:         "400",
+			url:            defaultImgURL + "_gopher_original_1024x504.jpg",
+			response:       "resize image failed",
+			resizeResponse: nil,
+			httpStatus:     http.StatusBadGateway,
+			err:            errors.New("error"),
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
+			req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
 			req = mux.SetURLVars(req, map[string]string{
-				"width":    strconv.Itoa(tt.width),
-				"height":   strconv.Itoa(tt.height),
-				"imageUrl": tt.url + tt.uri,
+				"width":    tt.width,
+				"height":   tt.height,
+				"imageURL": tt.url,
 			})
 
-			mockService.EXPECT().Resize(req.Context(), tt.width, tt.height, tt.url+tt.uri).Return(tt.resizeResponse, nil)
+			width, _ := strconv.Atoi(tt.width)
+			height, _ := strconv.Atoi(tt.height)
+
+			if tt.resizeResponse != nil || tt.err != nil {
+				mockService.EXPECT().Resize(
+					req.Context(),
+					width,
+					height,
+					tt.url,
+					req.Header,
+				).Return(
+					tt.resizeResponse,
+					tt.err,
+				)
+			}
+
 			h := &Handlers{
-				logger: logger,
+				logger: l,
 				svc:    mockService,
 			}
 
 			w := httptest.NewRecorder()
-			resp := w.Result()
-			defer resp.Body.Close()
 
 			h.ResizeHandler(w, req)
-			require.Equal(t, http.StatusOK, tt.responseCode)
-			require.Equal(t, strings.TrimSpace(w.Body.String()), string(image1))
+			require.Equal(t, tt.httpStatus, w.Result().StatusCode)
+			require.Equal(t, strings.TrimSpace(w.Body.String()), tt.response)
 		})
 	}
 }
