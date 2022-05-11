@@ -27,7 +27,7 @@ test-single:
 
 .PHONY: test-race
 test-race:
-	$(GO) test -p 2 -v -count=100 -race -timeout=7m ./pkg/... ./internal/...
+	$(GO) test -p 2 -v -count=100 -race -timeout=8m ./pkg/... ./internal/...
 
 .PHONY: test-coverage
 test-coverage:
