@@ -17,31 +17,36 @@ LDFLAGS = -ldflags "-X main.shaCommit=${CI_COMMIT_SHA}"
 GO = $(shell which go)
 GO_BUILD = GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(LDFLAGS)
 
-.PHONY: echo
-echo:
-	echo ${CI_COMMIT_SHA}
+.PHONY: build-server
+build-server:
+	$(GO_BUILD) -mod vendor -trimpath -o ./bin/server ./cmd/server
 
-.PHONY: test
-test:
-	go test -v -count=100 -race -timeout=5m ./...
+.PHONY: test-single
+test-single:
+	$(GO) test -v -count=1 -race -timeout=1m ./...
+
+.PHONY: test-race
+test-race:
+	$(GO) test -v -count=100 -race -timeout=5m ./...
 
 .PHONY: test-coverage
 test-coverage:
-	go test -p 1 -v -race -coverprofile cover.out ./...
-	go tool cover -html=cover.out -o cover.html
+	$(GO) test -p 1 -v -race -coverprofile cover.out ./...
+	$(GO) tool cover -html=cover.out -o cover.html
+
+.PHONY: test-integration
+test-integration:
+	$(GO) clean -testcache
+	$(GO) test -short ./integration_test/... -v
 
 .PHONY: lint
 lint:
 	golangci-lint run --color always --timeout 30m 2>/dev/null
 
-.PHONY: docker-up
-docker-up:
+.PHONY: start
+start:
 	docker-compose up -d
 
-.PHONY: docker-down
-docker-down:
+.PHONY: stop
+stop:
 	docker-compose down
-
-.PHONY: build-server
-build-server:
-	$(GO_BUILD) -mod vendor -trimpath -o ./bin/server ./cmd/server

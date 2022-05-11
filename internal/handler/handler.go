@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"image-previewer/pkg/imagepreviewer"
-
 	"github.com/rs/zerolog"
+	"image-previewer/pkg/imagepreviewer"
 )
 
 type Handlers struct {

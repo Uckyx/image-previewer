@@ -3,6 +3,7 @@ package handler
 import (
 	"bufio"
 	"fmt"
+	"image-previewer/pkg/imagepreviewer"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"image-previewer/pkg/imagepreviewer"
+
 	mock_image_previewer "image-previewer/pkg/imagepreviewer/mock"
 )
 
@@ -146,7 +147,7 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 }
 
 func loadImage(imgName string) []byte {
-	fileToBeUploaded := "./image_test/" + imgName
+	fileToBeUploaded := "./img_example/" + imgName
 	file, err := os.Open(fileToBeUploaded)
 	if err != nil {
 		fmt.Println(err)

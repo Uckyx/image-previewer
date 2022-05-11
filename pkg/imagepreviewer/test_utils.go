@@ -13,7 +13,7 @@ const (
 )
 
 func loadImage(imgName string) []byte {
-	fileToBeUploaded := "./image_test/" + imgName
+	fileToBeUploaded := "./img_example/" + imgName
 	file, err := os.Open(fileToBeUploaded)
 	if err != nil {
 		fmt.Println(err)

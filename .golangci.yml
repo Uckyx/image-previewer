@@ -1,4 +1,6 @@
 run:
+  skip-dirs:
+    - vendor
   tests: true
 
 linters-settings:

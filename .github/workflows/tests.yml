@@ -54,3 +54,6 @@ jobs:
 
       - name: Unit tests
         run: go test -v -count=100 -race -timeout=5m ./...
+
+      - name: Integration tests
+        run: make start && make test-integration
