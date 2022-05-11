@@ -146,7 +146,7 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 }
 
 func loadImage(imgName string) []byte {
-	fileToBeUploaded := "./img_example/" + imgName
+	fileToBeUploaded := "../../img_example/" + imgName
 	file, err := os.Open(fileToBeUploaded)
 	if err != nil {
 		fmt.Println(err)

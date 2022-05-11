@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	ImageURL        = "https://raw.githubusercontent.com/OtusGolang/final_project/master/examples/image-previewer/"
+	ImageURL        = "https://raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
 	OriginalImgName = "_gopher_original_1024x504.jpg"
 	ResizedImgName  = "gopher_256x126_resized.jpg"
 )
 
 func loadImage(imgName string) []byte {
-	fileToBeUploaded := "./img_example/" + imgName
+	fileToBeUploaded := "../../img_example/" + imgName
 	file, err := os.Open(fileToBeUploaded)
 	if err != nil {
 		fmt.Println(err)

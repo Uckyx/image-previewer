@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var defaultImgURL = "raw.githubusercontent.com/Uckyx/image-previewer/dev/integration_test/img_example/"
+var defaultImgURL = "raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
 
 func Test_Resize(t *testing.T) {
 	ctx := context.Background()
