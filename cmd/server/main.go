@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"image-previewer/internal/app"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"image-previewer/internal/app"
 )
 
 var shaCommit = "local"

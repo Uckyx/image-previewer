@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -12,51 +13,59 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	c       *http.Client
-	timeout = 60 * time.Second
-)
+var defaultImgURL = "raw.githubusercontent.com/Uckyx/image-previewer/dev/integration_test/img_example/"
 
-func TestGet(t *testing.T) {
+func Test_Resize(t *testing.T) {
+	ctx := context.Background()
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+	c := &http.Client{
+		Timeout:   60 * time.Second,
+		Transport: customTransport,
+	}
+
+	t.Parallel()
+
 	tests := []struct {
-		Url    string
+		URL    string
 		Status int
 	}{
 		{
-			Url:    "/resize/200/200/raw.githubusercontent.com/Uckyx/image-previewer/dev/integration_test/img_example/_gopher_original_1024x504.jpg",
+			URL:    "/resize/200/200/" + defaultImgURL + "_gopher_original_1024x504.jpg",
 			Status: http.StatusOK,
 		},
 		{
-			Url:    "/resize/200/200/raw.123.jpg",
+			URL:    "/resize/200/200/raw.554123.jpg",
 			Status: http.StatusBadGateway,
 		},
 		{
-			Url:    "/resize/200/200/raw.githubusercontent.com/Uckyx/image-previewer/dev/integration_test/img_example/foo.jpg",
+			URL:    "/resize/200/200/" + defaultImgURL + "foo.jpg",
 			Status: http.StatusBadGateway,
 		},
 		{
-			Url:    "/resize/2000/2000/raw.githubusercontent.com/Uckyx/image-previewer/dev/integration_test/img_example/_gopher_original_1024x504.jpg",
+			URL:    "/resize/2000/2000/" + defaultImgURL + "_gopher_original_1024x504.jpg",
 			Status: http.StatusOK,
 		},
 		{
-			Url:    "/resize/width/height/raw.githubusercontent.com/Uckyx/image-previewer/dev/integration_test/img_example/_gopher_original_1024x504.jpg",
+			URL:    "/resize/width/height/" + defaultImgURL + "_gopher_original_1024x504.jpg",
 			Status: http.StatusNotFound,
 		},
 		{
-			Url:    "/resize/200/200/raw.githubusercontent.com/Uckyx/image-previewer/dev/integration_test/img_example/.env.dist",
+			URL:    "/resize/200/200/raw.githubusercontent.com/Uckyx/image-previewer/dev/.env.dist",
 			Status: http.StatusBadGateway,
 		},
 		{
-			Url:    "/resize/200/200/awd2q3@DA:::L:L!@#!@/",
+			URL:    "/resize/200/200/awd2q3@DA:::L:L!@#!@/",
 			Status: http.StatusBadRequest,
 		},
 	}
 
 	for k, tt := range tests {
 		q := tt
-		t.Run(fmt.Sprintf("%s %d", q.Url, k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s %d", q.URL, k), func(t *testing.T) {
 			t.Parallel()
-			resp, err := c.Get(buildUrl(q.Url))
+			request, _ := http.NewRequestWithContext(ctx, http.MethodGet, buildURL(q.URL), nil)
+			resp, err := c.Do(request)
 			require.NoError(t, err)
 			require.Equal(t, q.Status, resp.StatusCode)
 			_, err = readResponse(resp)
@@ -65,21 +74,12 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func init() {
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	c = &http.Client{
-		Timeout:   timeout,
-		Transport: customTransport,
-	}
+func buildURL(uri string) string {
+	return fmt.Sprintf("%s/%s", getBaseURL(), strings.TrimLeft(uri, "/"))
 }
 
-func getBaseUrl() string {
+func getBaseURL() string {
 	return strings.TrimRight("http://127.0.0.1", "/")
-}
-
-func buildUrl(uri string) string {
-	return fmt.Sprintf("%s/%s", getBaseUrl(), strings.TrimLeft(uri, "/"))
 }
 
 func readResponse(resp *http.Response) (string, error) {
