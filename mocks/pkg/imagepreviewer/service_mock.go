@@ -2,7 +2,7 @@
 // Source: service.go
 
 // Package mock_image_previewer is a generated GoMock package.
-package mock_image_previewer
+package mocks
 
 import (
 	context "context"
@@ -12,18 +12,18 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockService is a mock of Service interface.
+// MockService is a mocks of Service interface.
 type MockService struct {
 	ctrl     *gomock.Controller
 	recorder *MockServiceMockRecorder
 }
 
-// MockServiceMockRecorder is the mock recorder for MockService.
+// MockServiceMockRecorder is the mocks recorder for MockService.
 type MockServiceMockRecorder struct {
 	mock *MockService
 }
 
-// NewMockService creates a new mock instance.
+// NewMockService creates a new mocks instance.
 func NewMockService(ctrl *gomock.Controller) *MockService {
 	mock := &MockService{ctrl: ctrl}
 	mock.recorder = &MockServiceMockRecorder{mock}

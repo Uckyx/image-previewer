@@ -23,7 +23,7 @@ build-server:
 
 .PHONY: test-single
 test-single:
-	$(GO) test -v -count=1 -race -timeout=1m ./...
+	$(GO) test -v -count=1 -timeout=1m ./...
 
 .PHONY: test-race
 test-race:
