@@ -1,4 +1,4 @@
-![ci](https://github.com/Uckyx/image-previewer/actions/workflows/ci/badge.svg)
+![ci](https://github.com/Uckyx/image-previewer/actions/workflows/tests.yml/badge.svg)
 # Image Previewer
 
 ## Описание сервиса
