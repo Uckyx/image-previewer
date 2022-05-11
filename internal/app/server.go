@@ -2,15 +2,15 @@ package app
 
 import (
 	"context"
-	"image-previewer/internal/handler"
-	"image-previewer/pkg/cache"
-	"image-previewer/pkg/imagepreviewer"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
+	"image-previewer/internal/handler"
+	"image-previewer/pkg/cache"
+	"image-previewer/pkg/imagepreviewer"
 )
 
 type Server struct {

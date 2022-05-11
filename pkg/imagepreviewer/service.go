@@ -2,11 +2,11 @@ package imagepreviewer
 
 import (
 	"context"
-	"image-previewer/pkg/cache"
 	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
+	"image-previewer/pkg/cache"
 )
 
 func NewApp(

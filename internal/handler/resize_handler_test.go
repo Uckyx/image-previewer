@@ -3,7 +3,6 @@ package handler
 import (
 	"bufio"
 	"fmt"
-	"image-previewer/pkg/imagepreviewer"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,7 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-
+	"image-previewer/pkg/imagepreviewer"
 	mock_image_previewer "image-previewer/pkg/imagepreviewer/mock"
 )
 

@@ -2,12 +2,12 @@ package imagepreviewer
 
 import (
 	"context"
-	"image-previewer/pkg/cache"
 	"reflect"
 	"testing"
 
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	"image-previewer/pkg/cache"
 )
 
 func TestOriginalImageInCache(t *testing.T) {
