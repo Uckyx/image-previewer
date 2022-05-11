@@ -45,8 +45,8 @@ lint:
 
 .PHONY: start
 start:
-	docker-compose up -d
+	docker-compose up -d --remove-orphans
 
 .PHONY: stop
 stop:
-	docker-compose down
+	docker-compose down --remove-orphans
