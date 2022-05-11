@@ -1,5 +1,4 @@
-![Your Repository's Stats](https://github-readme-stats.vercel.app/api/top-langs/?username=Uckyx&theme=blue-green)
-
+![example workflow](https://github.com/Uckyx/image-previewer/actions/workflows/tests.yml/badge.svg)
 # Image Previewer
 
 ## Описание сервиса
