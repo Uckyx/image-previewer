@@ -9,13 +9,11 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
-	"github.com/stretchr/testify/require"
 )
 
 var defaultImgURL = "http://raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
@@ -67,12 +65,16 @@ func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-			resp := w.Result()
-			defer resp.Body.Close()
 
 			h.ResizeHandler(w, req)
-			require.Equal(t, http.StatusOK, tt.responseCode)
-			require.Equal(t, strings.TrimSpace(w.Body.String()), tt.response)
+
+			if status := w.Code; status != http.StatusOK {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+			}
+
+			if w.Body.String() != tt.response {
+				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.response)
+			}
 		})
 	}
 }
@@ -145,12 +147,16 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-			resp := w.Result()
-			defer resp.Body.Close()
 
 			h.ResizeHandler(w, req)
-			require.Equal(t, tt.httpStatus, resp.StatusCode)
-			require.Equal(t, strings.TrimSpace(w.Body.String()), tt.response)
+
+			if status := w.Code; status == http.StatusOK {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+			}
+
+			if w.Body.String() != tt.response {
+				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.response)
+			}
 		})
 	}
 }

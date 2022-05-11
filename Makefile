@@ -31,7 +31,7 @@ test-race:
 
 .PHONY: test-coverage
 test-coverage:
-	$(GO) test -p 1 -v -race -coverprofile cover.out ./...
+	$(GO) test -p 1 -v -race -coverprofile cover.out ./pkg/... ./internal/...
 	$(GO) tool cover -html=cover.out -o cover.html
 
 .PHONY: test-integration
