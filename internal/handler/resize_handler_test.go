@@ -3,6 +3,7 @@ package handler
 import (
 	"bufio"
 	"fmt"
+	"image-previewer/pkg/imagepreviewer"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,19 +11,19 @@ import (
 	"strings"
 	"testing"
 
+	mockimagepreviewer "image-previewer/pkg/imagepreviewer/mock"
+
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"image-previewer/pkg/imagepreviewer"
-	mock_image_previewer "image-previewer/pkg/imagepreviewer/mock"
 )
 
 func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockService := mock_image_previewer.NewMockService(ctrl)
+	mockService := mockimagepreviewer.NewMockService(ctrl)
 	logger := log.With().Logger()
 
 	image := loadImage("_gopher_original_1024x504.jpg")
@@ -80,7 +81,7 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockService := mock_image_previewer.NewMockService(ctrl)
+	mockService := mockimagepreviewer.NewMockService(ctrl)
 	logger := log.With().Logger()
 
 	image1 := loadImage("_gopher_original_1024x504.jpg")
