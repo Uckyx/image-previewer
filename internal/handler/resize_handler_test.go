@@ -145,9 +145,11 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
+			resp := w.Result()
+			defer resp.Body.Close()
 
 			h.ResizeHandler(w, req)
-			require.Equal(t, tt.httpStatus, w.Result().StatusCode)
+			require.Equal(t, tt.httpStatus, resp.StatusCode)
 			require.Equal(t, strings.TrimSpace(w.Body.String()), tt.response)
 		})
 	}
