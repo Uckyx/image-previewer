@@ -60,8 +60,6 @@ func (h *Handlers) createRequest(vars map[string]string) (r *ResizeRequest, err 
 		return nil, ErrIsNumeric
 	}
 
-	h.logger.Info().Msg(vars["imageURL"])
-
 	imageURL, err := url.Parse(vars["imageURL"])
 	if err != nil {
 		return nil, err
