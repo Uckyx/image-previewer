@@ -35,5 +35,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Build
+        run: go build -v ./...
+
       - name: Unit tests
         run: go test -v -count=100 -race -timeout=5m ./...

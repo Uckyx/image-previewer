@@ -36,12 +36,12 @@ lint:
 
 .PHONY: docker-up
 docker-up:
-	make build && docker-compose up -d
+	docker-compose up -d
 
 .PHONY: docker-down
 docker-down:
 	docker-compose down
 
-.PHONY: build
-build:
+.PHONY: build-server
+build-server:
 	$(GO_BUILD) -mod vendor -trimpath -o ./bin/server ./cmd/server

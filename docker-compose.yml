@@ -6,15 +6,15 @@ networks:
 services:
   ipreviewer:
     container_name: ipreviewer
-    image: alpine:latest
+    build:
+      context: .
+      dockerfile: server.dockerfile
+    volumes:
+      - .:/app
     ports:
       - "8080:8080"
-    volumes:
-      - ./bin:/var/www
     environment:
       - CACHE_CAPACITY=${CACHE_CAPACITY}
-    command:
-      - ./var/www/server
     networks:
       - previewer
 
