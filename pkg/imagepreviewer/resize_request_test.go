@@ -26,7 +26,13 @@ func TestNewResizeRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewResizeRequest(tt.args.ctx, tt.args.width, tt.args.height, tt.args.url, tt.args.headers); !reflect.DeepEqual(got, tt.want) {
+			if got := NewResizeRequest(
+				tt.args.ctx,
+				tt.args.width,
+				tt.args.height,
+				tt.args.url,
+				tt.args.headers,
+			); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewResizeRequest() = %v, want %v", got, tt.want)
 			}
 		})
