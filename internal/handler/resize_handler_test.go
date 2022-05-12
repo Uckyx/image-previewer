@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 )
 
 var defaultImgURL = "http://raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
@@ -149,6 +150,74 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 
 			if w.Body.String() != tt.response {
 				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.response)
+			}
+		})
+	}
+}
+
+func TestHandlers_ResizeHandler_ProxyHeaders(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockService := imagepreviewer.NewMockService(ctrl)
+	l := log.With().Logger()
+
+	image1 := loadImage("gopher_256x126_resized.jpg")
+
+	headers := map[string][]string{
+		"Content-Length": {0: "6495"},
+		"Content-Type":   {0: "image/jpeg"},
+	}
+
+	tests := []struct {
+		name         string
+		width        int64
+		height       int64
+		url          string
+		response     string
+		fillResponse *imagepreviewer.ResizeResponse
+		err          error
+		httpStatus   int64
+	}{
+		{
+			name:         "good headers",
+			width:        200,
+			height:       300,
+			url:          defaultImgURL + "_gopher_original_1024x504.jpg",
+			response:     string(image1),
+			fillResponse: &imagepreviewer.ResizeResponse{Img: image1, Headers: headers},
+			httpStatus:   http.StatusOK,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+			req = mux.SetURLVars(req, map[string]string{
+				"width":    strconv.Itoa(int(tt.width)),
+				"height":   strconv.Itoa(int(tt.height)),
+				"imageURL": tt.url,
+			})
+
+			fillParams := imagepreviewer.NewResizeRequest(
+				req.Context(),
+				int(tt.width),
+				int(tt.height),
+				tt.url, req.Header,
+			)
+			mockService.EXPECT().Resize(fillParams).Return(tt.fillResponse, tt.err)
+			h := &Handlers{
+				logger: l,
+				svc:    mockService,
+			}
+
+			w := httptest.NewRecorder()
+			h.ResizeHandler(w, req)
+
+			for name, values := range tt.fillResponse.Headers {
+				for _, value := range values {
+					require.Equal(t, value, w.Header().Get(name))
+				}
 			}
 		})
 	}
