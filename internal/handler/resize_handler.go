@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"context"
 	"fmt"
+	"image-previewer/pkg/imagepreviewer"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -11,14 +13,8 @@ import (
 
 var ErrIsNumeric = fmt.Errorf("field must be number")
 
-type ResizeRequest struct {
-	width  int
-	height int
-	url    string
-}
-
 func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
-	request, err := h.createRequest(mux.Vars(r))
+	request, err := h.createRequest(r.Context(), mux.Vars(r), r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("validation error"))
@@ -27,7 +23,7 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resizeResponse, err := h.svc.Resize(r.Context(), request.width, request.height, request.url, r.Header)
+	resizeResponse, err := h.svc.Resize(request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		w.Write([]byte("resize image failed"))
@@ -49,7 +45,11 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handlers) createRequest(vars map[string]string) (r *ResizeRequest, err error) {
+func (h *Handlers) createRequest(
+	ctx context.Context,
+	vars map[string]string,
+	headers map[string][]string,
+) (r *imagepreviewer.ResizeRequest, err error) {
 	width, err := strconv.Atoi(vars["width"])
 	if err != nil {
 		return nil, ErrIsNumeric
@@ -67,5 +67,5 @@ func (h *Handlers) createRequest(vars map[string]string) (r *ResizeRequest, err 
 
 	imageURL.Scheme = "http"
 
-	return &ResizeRequest{width: width, height: height, url: imageURL.String()}, nil
+	return imagepreviewer.NewResizeRequest(ctx, width, height, imageURL.String(), headers), nil
 }

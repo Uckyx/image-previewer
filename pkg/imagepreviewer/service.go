@@ -1,13 +1,28 @@
 package imagepreviewer
 
 import (
-	"context"
 	"image-previewer/pkg/cache"
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog"
 )
+
+type Service interface {
+	Resize(request *ResizeRequest) (*ResizeResponse, error)
+}
+
+type ResizeResponse struct {
+	Img     []byte
+	Headers map[string][]string
+}
+
+type service struct {
+	logger          zerolog.Logger
+	cache           cache.Cache
+	imageDownloader ImageDownloader
+	imageResizer    ImageResizer
+	w               sync.WaitGroup
+}
 
 func NewApp(
 	logger zerolog.Logger,
@@ -23,51 +38,19 @@ func NewApp(
 	}
 }
 
-type ResizeResponse struct {
-	Img     []byte
-	Headers map[string][]string
-}
-
-type Service interface {
-	Resize(
-		ctx context.Context,
-		width int,
-		height int,
-		url string,
-		headers map[string][]string,
-	) (*ResizeResponse, error)
-}
-
-type service struct {
-	logger          zerolog.Logger
-	cache           cache.Cache
-	imageDownloader ImageDownloader
-	imageResizer    ImageResizer
-	w               sync.WaitGroup
-}
-
-func (s *service) Resize(
-	ctx context.Context,
-	width int,
-	height int,
-	url string,
-	headers map[string][]string,
-) (*ResizeResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(1000)*time.Second)
-	defer cancel()
-
-	resizedImgKey := s.cache.GenerateResizedImgKey(url, width, height)
+func (s *service) Resize(request *ResizeRequest) (*ResizeResponse, error) {
+	resizedImgKey := s.cache.GenerateResizedImgKey(request.url, request.width, request.height)
 	resizedImg, ok := s.cache.Get(resizedImgKey)
 
 	if ok {
 		return &ResizeResponse{resizedImg, nil}, nil
 	}
 
-	originalImgKey := s.cache.GenerateOriginalImgKey(url)
+	originalImgKey := s.cache.GenerateOriginalImgKey(request.url)
 	originalImg, ok := s.cache.Get(originalImgKey)
 
 	if ok {
-		resizedImg, err := s.imageResizer.Resize(ctx, originalImg, width, height)
+		resizedImg, err := s.imageResizer.Resize(request.ctx, originalImg, request.width, request.height)
 		if err != nil {
 			return nil, err
 		}
@@ -77,14 +60,14 @@ func (s *service) Resize(
 		return &ResizeResponse{resizedImg, nil}, nil
 	}
 
-	downloadResponse, err := s.imageDownloader.Download(ctx, url, headers)
+	downloadResponse, err := s.imageDownloader.Download(request.ctx, request.url, request.headers)
 	if err != nil {
 		return nil, err
 	}
 
 	s.asyncCacheWrite(originalImgKey, downloadResponse.img)
 
-	resizedImg, err = s.imageResizer.Resize(ctx, downloadResponse.img, width, height)
+	resizedImg, err = s.imageResizer.Resize(request.ctx, downloadResponse.img, request.width, request.height)
 	if err != nil {
 		return nil, err
 	}

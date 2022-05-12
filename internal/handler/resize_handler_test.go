@@ -58,7 +58,8 @@ func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 				"imageURL": tt.url,
 			})
 
-			mockService.EXPECT().Resize(req.Context(), tt.width, tt.height, tt.url, req.Header).Return(tt.resizeResponse, nil)
+			request := imagepreviewer.NewResizeRequest(req.Context(), tt.width, tt.height, tt.url, req.Header)
+			mockService.EXPECT().Resize(request).Return(tt.resizeResponse, nil)
 			h := &Handlers{
 				logger: logger,
 				svc:    mockService,
@@ -128,17 +129,9 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 			width, _ := strconv.Atoi(tt.width)
 			height, _ := strconv.Atoi(tt.height)
 
+			request := imagepreviewer.NewResizeRequest(req.Context(), width, height, tt.url, req.Header)
 			if tt.resizeResponse != nil || tt.err != nil {
-				mockService.EXPECT().Resize(
-					req.Context(),
-					width,
-					height,
-					tt.url,
-					req.Header,
-				).Return(
-					tt.resizeResponse,
-					tt.err,
-				)
+				mockService.EXPECT().Resize(request).Return(tt.resizeResponse, tt.err)
 			}
 
 			h := &Handlers{

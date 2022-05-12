@@ -6,9 +6,80 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 )
+
+func TestDefaultService_Fill_positive(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	imageOrigin := loadImage(OriginalImgName)
+	imageResized := loadImage(ResizedImgName)
+	downloadedImage := &DownloadResponse{img: imageOrigin}
+
+	logger := log.With().Logger()
+	c := cache.NewCache(2)
+	resizer := NewImageResizer(logger)
+	mockDownloader := NewMockImageDownloader(ctrl)
+
+	type fields struct {
+		l          zerolog.Logger
+		cache      cache.Cache
+		downloader ImageDownloader
+		resizer    ImageResizer
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		params  *ResizeRequest
+		want    *ResizeResponse
+		wantErr bool
+	}{
+		{
+			name: "success_resized",
+			fields: fields{
+				l:          logger,
+				cache:      c,
+				downloader: mockDownloader,
+				resizer:    resizer,
+			},
+			params: NewResizeRequest(
+				context.Background(),
+				1000,
+				500,
+				ImageURL+OriginalImgName,
+				nil,
+			),
+			want:    &ResizeResponse{imageResized, nil},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := NewApp(
+				tt.fields.l,
+				tt.fields.cache,
+				tt.fields.downloader,
+				tt.fields.resizer,
+			)
+
+			mockDownloader.EXPECT().Download(
+				tt.params.ctx,
+				tt.params.url,
+				tt.params.headers,
+			).Return(downloadedImage, nil)
+
+			_, err := svc.Resize(tt.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Fill() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
 
 func Test_service_Resize_OriginalImageInCache(t *testing.T) {
 	logger := log.With().Logger()
@@ -29,7 +100,15 @@ func Test_service_Resize_OriginalImageInCache(t *testing.T) {
 	c.Set(key, img)
 
 	t.Run("get_original_img_from_cache_case", func(t *testing.T) {
-		gotImg, err := svc.Resize(ctx, 256, 126, ImageURL+OriginalImgName, nil)
+		request := NewResizeRequest(
+			ctx,
+			256,
+			126,
+			ImageURL+OriginalImgName,
+			nil,
+		)
+
+		gotImg, err := svc.Resize(request)
 		if err != nil {
 			t.Errorf("Resize() error = %v", err)
 			return
@@ -61,7 +140,9 @@ func Test_service_Resize_ResizedImageInCache(t *testing.T) {
 	c.Set(key, img)
 
 	t.Run("get_resized_img_from_cache_case", func(t *testing.T) {
-		gotImg, err := svc.Resize(ctx, 256, 126, ImageURL+OriginalImgName, nil)
+		request := NewResizeRequest(ctx, 256, 126, url, nil)
+
+		gotImg, err := svc.Resize(request)
 		if err != nil {
 			t.Errorf("Resize() error = %v", err)
 			return
@@ -97,7 +178,9 @@ func Test_service_Resize_RemoveImageInCache(t *testing.T) {
 	c.Set(resizedImgKey, resizedImg)
 
 	t.Run("remove_old_img_from_cache_case", func(t *testing.T) {
-		gotImg, err := svc.Resize(ctx, 333, 666, ImageURL+OriginalImgName, nil)
+		request := NewResizeRequest(ctx, 333, 666, url, nil)
+
+		gotImg, err := svc.Resize(request)
 		if err != nil {
 			t.Errorf("Resize() error = %v", err)
 			return
