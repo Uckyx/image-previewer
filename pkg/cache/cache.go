@@ -1,63 +1,75 @@
 package cache
 
-type Key string
+import (
+	"errors"
+	"fmt"
+)
+
+type Cache interface {
+	Set(key string, value []byte) bool
+	Get(key string) ([]byte, bool)
+	GenerateOriginalImgKey(url string) string
+	GenerateResizedImgKey(url string, width int, height int) string
+	Clear()
+}
 
 type lruCache struct {
 	capacity int
 	queue    List
-	items    map[Key]*ListItem
+	items    map[string]*ListItem
 }
 
 type cacheItem struct {
-	key   Key
+	key   string
 	value []byte
-}
-
-type Cache interface {
-	Set(key Key, value []byte) error
-	Get(key Key) ([]byte, error)
-	Clear()
 }
 
 func NewCache(capacity int) Cache {
 	return &lruCache{
 		capacity: capacity,
 		queue:    NewList(),
-		items:    make(map[Key]*ListItem, capacity),
+		items:    make(map[string]*ListItem, capacity),
 	}
 }
 
-func (lc *lruCache) Set(key Key, value []byte) error {
+func (lc *lruCache) Set(key string, value []byte) bool {
 	cItem := &cacheItem{key: key, value: value}
 	if listItem, ok := lc.items[key]; ok {
 		listItem.Value = cItem
 		lc.queue.MoveToFront(listItem)
 
-		return nil
+		return true
 	}
 
 	pushedItem := lc.queue.PushFront(cItem)
 	if lc.queue.Len() > lc.capacity {
-		lc.queue.Remove(lc.queue.Back())
+		convertedCacheItem, err := convertToCacheItem(lc.queue.Back().Value)
+		if err != nil {
+			return false
+		}
 
-		//todo разобраться с значением value
-		delete(lc.items, lc.queue.Back().Value.key)
+		lc.queue.Remove(lc.queue.Back())
+		delete(lc.items, convertedCacheItem.key)
 	}
 
 	lc.items[key] = pushedItem
 
-	return nil
+	return false
 }
 
-func (lc *lruCache) Get(key Key) ([]byte, error) {
+func (lc *lruCache) Get(key string) ([]byte, bool) {
 	if listItem, ok := lc.items[key]; ok {
 		lc.queue.MoveToFront(listItem)
 
-		//todo разобраться с значением value
-		return listItem.Value.value, nil
+		convertedCacheItem, err := convertToCacheItem(listItem.Value)
+		if err != nil {
+			return nil, false
+		}
+
+		return convertedCacheItem.value, true
 	}
 
-	return nil, nil
+	return nil, false
 }
 
 func (lc *lruCache) Clear() {
@@ -65,4 +77,21 @@ func (lc *lruCache) Clear() {
 	for item := range lc.items {
 		delete(lc.items, item)
 	}
+}
+
+func (lc *lruCache) GenerateOriginalImgKey(url string) string {
+	return url
+}
+
+func (lc *lruCache) GenerateResizedImgKey(url string, width int, height int) string {
+	return fmt.Sprintf("%s%d%d", url, width, height)
+}
+
+func convertToCacheItem(value interface{}) (*cacheItem, error) {
+	cItem, ok := value.(*cacheItem)
+	if !ok {
+		return nil, errors.New("first element is number")
+	}
+
+	return cItem, nil
 }

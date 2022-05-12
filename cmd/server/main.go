@@ -2,36 +2,39 @@ package main
 
 import (
 	"context"
+
+	"github.com/Uckyx/image-previewer/internal/app"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"image-previewer/internal/app"
 )
 
 var shaCommit = "local"
 
+const DefaultCacheCapacity = 100
+
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	l := log.With().Str("sha_commit", shaCommit).Logger()
+	logger := log.With().Str("sha_commit", shaCommit).Logger()
 
 	viper.SetConfigFile(".env")
 	err := viper.ReadInConfig()
 	if err != nil {
-		l.Fatal().Err(err).Msg("Не удалось загрузить файл env")
+		logger.Info().Err(err).Msg("Не удалось загрузить файл env")
 	}
 
-	srv, err := app.NewServer()
-	if err != nil {
-		l.Fatal().Err(err).Msg("Ошибка старта сервера")
-	}
-
-	listenPort, ok := viper.Get("LISTEN_PORT").(int)
+	cacheCapacity, ok := viper.Get("CACHE_CAPACITY").(int)
 	if !ok {
-		listenPort = 8090
+		cacheCapacity = DefaultCacheCapacity
+	}
+
+	srv, err := app.NewServer(logger, cacheCapacity)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Ошибка старта сервера")
 	}
 
 	ctx := log.Logger.WithContext(context.Background())
-	if err := srv.Listen(ctx, listenPort); err != nil {
-		l.Fatal().Err(err).Msg("Не удалось прослушать порт")
+	if err := srv.Listen(ctx); err != nil {
+		logger.Fatal().Err(err).Msg("Не удалось прослушать порт")
 	}
 }

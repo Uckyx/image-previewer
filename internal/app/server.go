@@ -2,30 +2,34 @@ package app
 
 import (
 	"context"
-	"fmt"
-	"github.com/gorilla/mux"
-	"image-previewer/pkg/cache"
 	"net"
 	"net/http"
 	"time"
 
-	"image-previewer/pkg/imagePreviewer"
+	"github.com/Uckyx/image-previewer/internal/handler"
+	"github.com/Uckyx/image-previewer/pkg/cache"
+	"github.com/Uckyx/image-previewer/pkg/imagepreviewer"
+	"github.com/gorilla/mux"
+	"github.com/rs/zerolog"
 )
 
-const CacheCapacity = 100
-
 type Server struct {
-	app    imagePreviewer.Service
+	svc    imagepreviewer.Service
+	logger zerolog.Logger
 	router *mux.Router
 }
 
-func NewServer() (*Server, error) {
-	svc := imagePreviewer.NewApp(
-		cache.NewCache(CacheCapacity),
+func NewServer(logger zerolog.Logger, cacheCapacity int) (*Server, error) {
+	svc := imagepreviewer.NewApp(
+		logger,
+		cache.NewCache(cacheCapacity),
+		imagepreviewer.NewImageDownloader(logger),
+		imagepreviewer.NewImageResizer(logger),
 	)
 
 	srv := &Server{
-		app: svc,
+		svc:    svc,
+		logger: logger,
 	}
 
 	srv.createRoute()
@@ -33,9 +37,9 @@ func NewServer() (*Server, error) {
 	return srv, nil
 }
 
-func (s *Server) Listen(ctx context.Context, port int) error {
-	httpSrv := http.Server{
-		Addr:         fmt.Sprintf(":%d", port),
+func (s *Server) Listen(ctx context.Context) error {
+	httpSrv := &http.Server{
+		Addr:         "0.0.0.0:8080",
 		Handler:      s.router,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
@@ -47,17 +51,11 @@ func (s *Server) Listen(ctx context.Context, port int) error {
 	return httpSrv.ListenAndServe()
 }
 
-func (s *Server) Fill(w http.ResponseWriter, r *http.Request) {
-	err := s.app.Fill(w, r)
-	if err != nil {
-		return
-	}
-}
-
 func (s *Server) createRoute() {
 	r := mux.NewRouter()
-	r.HandleFunc("/fill/{width:[0-9]+}/{height:[0-9]+}/{imageUrl:.*}", s.Fill)
-	http.Handle("/", r)
+	handlers := handler.NewHandlers(s.logger, s.svc)
+
+	r.HandleFunc("/resize/{width:[0-9]+}/{height:[0-9]+}/{imageURL:.*}", handlers.ResizeHandler)
 
 	s.router = r
 }
