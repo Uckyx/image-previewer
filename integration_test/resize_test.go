@@ -27,34 +27,42 @@ func Test_Resize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		name   string
 		URL    string
 		Status int
 	}{
 		{
+			name:   "status_ok_case",
 			URL:    "/resize/200/200/" + defaultImgURL + "_gopher_original_1024x504.jpg",
 			Status: http.StatusOK,
 		},
 		{
-			URL:    "/resize/200/200/raw.554123.jpg",
-			Status: http.StatusBadGateway,
-		},
-		{
-			URL:    "/resize/200/200/" + defaultImgURL + "foo.jpg",
-			Status: http.StatusBadGateway,
-		},
-		{
+			name:   "status_ok_case_large_resize",
 			URL:    "/resize/2000/2000/" + defaultImgURL + "_gopher_original_1024x504.jpg",
 			Status: http.StatusOK,
 		},
 		{
-			URL:    "/resize/width/height/" + defaultImgURL + "_gopher_original_1024x504.jpg",
-			Status: http.StatusNotFound,
+			name:   "status_bad_gateway_with_not_walid_url_case",
+			URL:    "/resize/200/200/raw.554123.jpg",
+			Status: http.StatusBadGateway,
 		},
 		{
+			name:   "status_bad_gateway_with_not_found_img_case",
+			URL:    "/resize/200/200/" + defaultImgURL + "foo.jpg",
+			Status: http.StatusBadGateway,
+		},
+		{
+			name:   "status_bad_gateway_with_not_support_file_case",
 			URL:    "/resize/200/200/raw.githubusercontent.com/Uckyx/image-previewer/dev/.env.dist",
 			Status: http.StatusBadGateway,
 		},
 		{
+			name:   "status_not_found_case",
+			URL:    "/resize/width/height/" + defaultImgURL + "_gopher_original_1024x504.jpg",
+			Status: http.StatusNotFound,
+		},
+		{
+			name:   "status_bad_request_with_not_correct_url_case",
 			URL:    "/resize/200/200/awd2q3@DA:::L:L!@#!@/",
 			Status: http.StatusBadRequest,
 		},
@@ -62,7 +70,7 @@ func Test_Resize(t *testing.T) {
 
 	for k, tt := range tests {
 		q := tt
-		t.Run(fmt.Sprintf("%s %d", q.URL, k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s %d", q.name, k), func(t *testing.T) {
 			t.Parallel()
 			request, _ := http.NewRequestWithContext(ctx, http.MethodGet, buildURL(q.URL), nil)
 			resp, err := c.Do(request)
