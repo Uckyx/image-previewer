@@ -21,6 +21,10 @@ GO_BUILD = GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(GO) build 
 build-server:
 	$(GO_BUILD) -mod vendor -trimpath -o ./bin/server ./cmd/server
 
+.PHONY: run-server
+run-server:
+	$(GO) run ./cmd/server
+
 .PHONY: test-single
 test-single:
 	$(GO) test -p 2 -v -count=1 -timeout=1m ./pkg/... ./internal/...

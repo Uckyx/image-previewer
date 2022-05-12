@@ -22,8 +22,13 @@
 
 Докер запускается с флагом `--remove-orphans`, чтобы не захламлять старыми контейнерами
 
-1. make start - запускает проект 
-2. make stop - остановка контейнеров
+1. `make start` - запускает проект 
+2. `make stop` - остановка контейнеров
+
+### Запуск в консоли
+
+1. `make build-server` - генерим бинарный файл
+2. `make run-server` - стартуем сервер из консоли
 
 ## Описание работы сервиса
 Отправляем на url resize параметры для изменения размера изображения и ссылку для получения исходного изображения которое хотим изменить
@@ -45,4 +50,7 @@
 4. 502 - в случае не доступности или ошибки удаленного сервиса
 
 ### Пример для получения картинки после запуска докера
+**Пример для Докера:** 
 `http://127.0.0.1/resize/200/200/raw.githubusercontent.com/OtusGolang/final_project/master/examples/image-previewer/gopher_1024x252.jpg`
+**Пример для запуска из консоли**
+`http://localhost:8080/resize/300/300/raw.githubusercontent.com/OtusGolang/final_project/master/examples/image-previewer/_gopher_original_1024x504.jpg`
