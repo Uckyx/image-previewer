@@ -55,7 +55,7 @@ func (s *service) Resize(request *ResizeRequest) (*ResizeResponse, error) {
 			return nil, err
 		}
 
-		s.asyncCacheWrite(resizedImgKey, resizedImg)
+		s.cache.Set(resizedImgKey, resizedImg)
 
 		return &ResizeResponse{resizedImg, nil}, nil
 	}
@@ -65,25 +65,14 @@ func (s *service) Resize(request *ResizeRequest) (*ResizeResponse, error) {
 		return nil, err
 	}
 
-	s.asyncCacheWrite(originalImgKey, downloadResponse.img)
+	s.cache.Set(originalImgKey, downloadResponse.img)
 
 	resizedImg, err = s.imageResizer.Resize(request.ctx, downloadResponse.img, request.width, request.height)
 	if err != nil {
 		return nil, err
 	}
 
-	s.asyncCacheWrite(resizedImgKey, resizedImg)
+	s.cache.Set(resizedImgKey, resizedImg)
 
 	return &ResizeResponse{resizedImg, downloadResponse.headers}, nil
-}
-
-func (s *service) asyncCacheWrite(key string, img []byte) {
-	s.w.Add(1)
-	go func() {
-		s.cache.Set(key, img)
-
-		s.w.Done()
-	}()
-
-	s.w.Wait()
 }

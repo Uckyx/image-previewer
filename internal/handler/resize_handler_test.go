@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var defaultImgURL = "http://raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
+var defaultImgURL = "https://raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
 
 func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -52,7 +52,7 @@ func TestHandlers_ResizeHandler_Positive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt := tt
-			req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+			req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
 			req = mux.SetURLVars(req, map[string]string{
 				"width":    strconv.Itoa(tt.width),
 				"height":   strconv.Itoa(tt.height),
@@ -120,18 +120,25 @@ func TestHandlers_ResizeHandler_Negative(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+			req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
 			req = mux.SetURLVars(req, map[string]string{
 				"width":    tt.width,
 				"height":   tt.height,
 				"imageURL": tt.url,
 			})
 
-			width, _ := strconv.Atoi(tt.width)
-			height, _ := strconv.Atoi(tt.height)
-
-			request := imagepreviewer.NewResizeRequest(req.Context(), width, height, tt.url, req.Header)
 			if tt.resizeResponse != nil || tt.err != nil {
+				width, err := strconv.Atoi(tt.width)
+				if err != nil {
+					t.Errorf("error converted width to int")
+				}
+
+				height, err := strconv.Atoi(tt.height)
+				if err != nil {
+					t.Errorf("error converted height to int")
+				}
+
+				request := imagepreviewer.NewResizeRequest(req.Context(), width, height, tt.url, req.Header)
 				mockService.EXPECT().Resize(request).Return(tt.resizeResponse, tt.err)
 			}
 
@@ -192,7 +199,7 @@ func TestHandlers_ResizeHandler_ProxyHeaders(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+			req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
 			req = mux.SetURLVars(req, map[string]string{
 				"width":    strconv.Itoa(int(tt.width)),
 				"height":   strconv.Itoa(int(tt.height)),

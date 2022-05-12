@@ -11,6 +11,8 @@ import (
 
 var shaCommit = "local"
 
+const DefaultCacheCapacity = 100
+
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	logger := log.With().Str("sha_commit", shaCommit).Logger()
@@ -23,7 +25,7 @@ func main() {
 
 	cacheCapacity, ok := viper.Get("CACHE_CAPACITY").(int)
 	if !ok {
-		cacheCapacity = 100
+		cacheCapacity = DefaultCacheCapacity
 	}
 
 	srv, err := app.NewServer(logger, cacheCapacity)

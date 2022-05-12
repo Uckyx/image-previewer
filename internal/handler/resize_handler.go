@@ -11,7 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var ErrIsNumeric = fmt.Errorf("field must be number")
+var ErrWidthIsNumeric = fmt.Errorf("field width must be number")
+var ErrHeightIsNumeric = fmt.Errorf("field height must be number")
 
 func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	request, err := h.createRequest(r.Context(), mux.Vars(r), r.Header)
@@ -52,12 +53,12 @@ func (h *Handlers) createRequest(
 ) (r *imagepreviewer.ResizeRequest, err error) {
 	width, err := strconv.Atoi(vars["width"])
 	if err != nil {
-		return nil, ErrIsNumeric
+		return nil, ErrWidthIsNumeric
 	}
 
 	height, err := strconv.Atoi(vars["height"])
 	if err != nil {
-		return nil, ErrIsNumeric
+		return nil, ErrHeightIsNumeric
 	}
 
 	imageURL, err := url.Parse(vars["imageURL"])
@@ -65,7 +66,7 @@ func (h *Handlers) createRequest(
 		return nil, err
 	}
 
-	imageURL.Scheme = "http"
+	imageURL.Scheme = "https"
 
 	return imagepreviewer.NewResizeRequest(ctx, width, height, imageURL.String(), headers), nil
 }

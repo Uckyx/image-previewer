@@ -124,8 +124,8 @@ func Test_lruCache_GenerateOriginalImgKey(t *testing.T) {
 	}{
 		{
 			name: "success_generate_original_key",
-			url:  "http://foo.bar",
-			want: "http://foo.bar",
+			url:  "https://foo.bar",
+			want: "https://foo.bar",
 		},
 	}
 	for _, tt := range tests {
@@ -149,10 +149,10 @@ func Test_lruCache_GenerateResizedImgKey(t *testing.T) {
 	}{
 		{
 			name:   "success_generate_resized_key",
-			url:    "http://foo.bar",
+			url:    "https://foo.bar",
 			width:  500,
 			height: 500,
-			want:   "http://foo.bar500500",
+			want:   "https://foo.bar500500",
 		},
 	}
 	for _, tt := range tests {
