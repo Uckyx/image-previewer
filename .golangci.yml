@@ -22,7 +22,7 @@ linters:
     - exhaustive
     - exportloopref
     - funlen
-#    - gci отключил, есть конфликт с gofumpt, если поправить для gci, то ошибка в gofumpt и наооборот
+    - gci
     - gocognit
     - goconst
     - gocritic

@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"image-previewer/pkg/imagepreviewer"
-
+	"github.com/Uckyx/image-previewer/pkg/imagepreviewer"
 	"github.com/rs/zerolog"
 )
 

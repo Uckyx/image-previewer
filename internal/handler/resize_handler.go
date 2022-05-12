@@ -3,11 +3,11 @@ package handler
 import (
 	"context"
 	"fmt"
-	"image-previewer/pkg/imagepreviewer"
 	"net/http"
 	"net/url"
 	"strconv"
 
+	"github.com/Uckyx/image-previewer/pkg/imagepreviewer"
 	"github.com/gorilla/mux"
 )
 
@@ -17,7 +17,10 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	request, err := h.createRequest(r.Context(), mux.Vars(r), r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("validation error"))
+		_, err := w.Write([]byte("validation error"))
+		if err != nil {
+			return
+		}
 		h.logger.Err(err).Msg(err.Error())
 
 		return
@@ -26,7 +29,10 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	resizeResponse, err := h.svc.Resize(request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
-		w.Write([]byte("resize image failed"))
+		_, err := w.Write([]byte("resize image failed"))
+		if err != nil {
+			return
+		}
 		h.logger.Err(err).Msg(err.Error())
 
 		return

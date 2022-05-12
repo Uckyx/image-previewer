@@ -2,10 +2,10 @@ package imagepreviewer
 
 import (
 	"context"
-	"image-previewer/pkg/cache"
 	"reflect"
 	"testing"
 
+	"github.com/Uckyx/image-previewer/pkg/cache"
 	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

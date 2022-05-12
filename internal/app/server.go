@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
-	"image-previewer/internal/handler"
-	"image-previewer/pkg/cache"
-	"image-previewer/pkg/imagepreviewer"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/Uckyx/image-previewer/internal/handler"
+	"github.com/Uckyx/image-previewer/pkg/cache"
+	"github.com/Uckyx/image-previewer/pkg/imagepreviewer"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 )

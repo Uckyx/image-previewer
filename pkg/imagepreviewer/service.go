@@ -1,9 +1,9 @@
 package imagepreviewer
 
 import (
-	"image-previewer/pkg/cache"
 	"sync"
 
+	"github.com/Uckyx/image-previewer/pkg/cache"
 	"github.com/rs/zerolog"
 )
 

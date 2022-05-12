@@ -1,4 +1,4 @@
-module image-previewer
+module github.com/Uckyx/image-previewer
 
 go 1.18
 
