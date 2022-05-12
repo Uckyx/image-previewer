@@ -17,10 +17,7 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	request, err := h.createRequest(r.Context(), mux.Vars(r), r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_, err := w.Write([]byte("validation error"))
-		if err != nil {
-			return
-		}
+		w.Write([]byte("validation error"))
 		h.logger.Err(err).Msg(err.Error())
 
 		return
@@ -29,10 +26,7 @@ func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	resizeResponse, err := h.svc.Resize(request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
-		_, err := w.Write([]byte("resize image failed"))
-		if err != nil {
-			return
-		}
+		w.Write([]byte("resize image failed"))
 		h.logger.Err(err).Msg(err.Error())
 
 		return
