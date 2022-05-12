@@ -1,8 +1,6 @@
 package imagepreviewer
 
 import (
-	"sync"
-
 	"github.com/Uckyx/image-previewer/pkg/cache"
 	"github.com/rs/zerolog"
 )
@@ -21,7 +19,6 @@ type service struct {
 	cache           cache.Cache
 	imageDownloader ImageDownloader
 	imageResizer    ImageResizer
-	w               sync.WaitGroup
 }
 
 func NewApp(

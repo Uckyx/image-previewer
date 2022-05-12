@@ -11,8 +11,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var ErrWidthIsNumeric = fmt.Errorf("field width must be number")
-var ErrHeightIsNumeric = fmt.Errorf("field height must be number")
+var (
+	ErrWidthIsNumeric  = fmt.Errorf("field width must be number")
+	ErrHeightIsNumeric = fmt.Errorf("field height must be number")
+)
 
 func (h *Handlers) ResizeHandler(w http.ResponseWriter, r *http.Request) {
 	request, err := h.createRequest(r.Context(), mux.Vars(r), r.Header)

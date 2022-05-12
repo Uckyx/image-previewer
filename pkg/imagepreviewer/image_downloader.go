@@ -3,7 +3,6 @@ package imagepreviewer
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -57,12 +56,7 @@ func (i *imageDownloader) Download(
 		return nil, err
 	}
 
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			i.logger.Err(err).Msg(err.Error())
-		}
-	}(resp.Body)
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, ErrResponseStatus
